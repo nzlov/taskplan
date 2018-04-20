@@ -463,6 +463,10 @@ func TaskList(c *gin.Context) {
 	all := c.Query("all")
 	objs := []Task{}
 
+	id := c.Param("id")
+	if id != "" {
+		query["id = ?"] = id
+	}
 	or := []map[string]interface{}{}
 	filter := strings.TrimSpace(c.Query("filter"))
 	if filter != "" {
@@ -488,10 +492,6 @@ func TaskList(c *gin.Context) {
 			})
 		}
 		return
-	}
-	id := c.Param("id")
-	if id != "" {
-		query["id = ?"] = id
 	}
 	offsets := c.Query("offset")
 	limits := c.Query("limit")

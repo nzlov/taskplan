@@ -222,7 +222,12 @@ export default {
       },
       ptaskloading: false,
       ptasksearch: null,
-      tasks: [],
+      tasks: [{
+          name: '无',
+          id: '0',
+      }],
+      tasknames: [],
+      taskids: [],
       users: [],
       usergroups: [],
     };
@@ -239,7 +244,7 @@ export default {
       val || this.close();
     },
     ptasksearch(val) {
-      val && this.reloadTasks(val);
+      val && this.reloadTasks();
     },
   },
 
@@ -284,6 +289,7 @@ export default {
         this.enddate = DateUtil.formatDate1(date);
         this.editedItem.endtime = DateUtil.formatTime(date);
       }
+      this.reloadTasks(item.taskid);
       this.dialog = true;
     },
 
@@ -516,21 +522,45 @@ export default {
         }
       }
     },
-    reloadTasks() {
+    reloadTasks(id) {
+      console.dir(id);
+      if (!id && !this.ptasksearch) {
+        return;
+      }
+      if (!id){
+        return;
+      } else {
+        if (this.taskids.indexOf(id) > -1) {
+          return;
+        }
+      }
+      if (this.tasknames.indexOf(this.ptasksearch) > -1) {
+        return;
+      }
+
       this.ptaskloading = true;
       new Promise((resolve) => {
         const objs = [{
           name: '无',
           id: '0',
         }];
-        this.$http.LGet(this.$store.state, `/task?filter=${this.ptasksearch}`).then((resp) => {
+        let url = `/task?filter=${this.ptasksearch}`;
+        if (id) {
+          url = `/task/${id}`;
+        }
+
+        this.$http.LGet(this.$store.state, url).then((resp) => {
           switch (resp.data.code) {
             case 0: {
               resp.data.data.data.forEach((element) => {
-                objs.push({
-                  id: element.ID,
-                  name: element.Name,
-                });
+                if (this.tasknames.indexOf(element.name) == -1) {
+                  this.tasknames.push(element.name);
+                  this.taskids.push(element.ID);
+                  this.tasks.push({
+                    id: element.ID,
+                    name: element.Name,
+                  });
+                }
               });
               break;
             }
@@ -548,7 +578,6 @@ export default {
         });
       }).then((data) => {
         this.ptaskloading = false;
-        this.tasks = data.objs;
       });
     },
     getDesserts() {
