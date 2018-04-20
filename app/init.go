@@ -1,6 +1,15 @@
 package app
 
-import "github.com/gin-gonic/gin"
+import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+var PM = struct {
+	start string
+	end   string
+}{}
 
 func Init(r *gin.Engine) {
 
@@ -9,6 +18,8 @@ func Init(r *gin.Engine) {
 		panic(err)
 	}
 	//DB.LogMode(true)
+
+	genPM()
 
 	InitDBModel(
 		new(Permission),
@@ -23,4 +34,16 @@ func Init(r *gin.Engine) {
 
 	Router(r)
 
+}
+
+//计算下午上下班时间
+func genPM() {
+	d := time.Now().Month()
+	if d > 4 && d < 10 {
+		PM.start = " 13:30:00"
+		PM.end = " 18:00:00"
+	} else {
+		PM.start = " 13:00:00"
+		PM.end = " 17:30:00"
+	}
 }

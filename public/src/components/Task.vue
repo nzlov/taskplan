@@ -98,7 +98,7 @@
                         <span class="headline">计划结束时间</span>
                       </v-card-title>
                       <v-card-text>
-                        <v-date-picker locale="zh-cn" :first-day-of-week="1" :allowed-dates="allowedDates" v-model="enddate"></v-date-picker>
+                        <v-date-picker locale="zh-cn" :first-day-of-week="1" :allowed-dates="allowedDates" min="8:30" max="18:00" v-model="enddate"></v-date-picker>
                         <v-time-picker locale="zh-cn" v-model="editedItem.endtime" format="24hr"></v-time-picker>
                       </v-card-text>
                     </v-card>
