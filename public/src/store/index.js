@@ -14,6 +14,9 @@ const store = new Vuex.Store({
     realname: '',
     permissions: {},
     menu: [],
+    users: [],
+    roles: [],
+    usergroups: [],
   },
   mutations: {
     init(state) {

@@ -233,63 +233,8 @@
       this.resetP = Object.prototype.hasOwnProperty.call(this.$store.state.permissions, 'user.resetpassword');
       this.delP = Object.prototype.hasOwnProperty.call(this.$store.state.permissions, 'user.del');
 
-      new Promise((resolve) => {
-        const objs = [];
-        this.$http.LGet(this.$store.state, '/role').then((resp) => {
-          switch (resp.data.code) {
-            case 0: {
-              resp.data.data.data.forEach((element) => {
-                objs.push({
-                  id: element.ID,
-                  name: element.Name,
-                });
-              });
-              break;
-            }
-            default:
-              console.dir('服务器报错');
-          }
-          resolve({
-            objs,
-          });
-        }).catch(() => {
-          console.dir('服务器报错');
-          resolve({
-            objs,
-          });
-        });
-      }).then((data) => {
-        this.roles = data.objs;
-      });
-
-      new Promise((resolve) => {
-        const objs = [];
-        this.$http.LGet(this.$store.state, '/usergroup').then((resp) => {
-          switch (resp.data.code) {
-            case 0: {
-              resp.data.data.data.forEach((element) => {
-                objs.push({
-                  id: element.ID,
-                  name: element.Name,
-                });
-              });
-              break;
-            }
-            default:
-              console.dir('服务器报错');
-          }
-          resolve({
-            objs,
-          });
-        }).catch(() => {
-          console.dir('服务器报错');
-          resolve({
-            objs,
-          });
-        });
-      }).then((data) => {
-        this.usergroups = data.objs;
-      });
+      this.roles = this.$store.state.roles;
+      this.usergroups = this.$store.state.usergroups;
     },
     methods: {
       searchData() {

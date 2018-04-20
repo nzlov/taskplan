@@ -177,8 +177,8 @@
               <td class="text-xs-center">{{ props.item.starts }}</td>
               <td class="text-xs-center">{{ props.item.ends }}</td>
               <td class="text-xs-center">{{ props.item.realends }}</td>
-              <td class="text-xs-center">{{ props.item.time }}</td>
               <td class="text-xs-center">{{ props.item.statuss }}</td>
+              <td class="text-xs-center">{{ props.item.time }}</td>
               <td class="justify-center layout px-0">
                 <v-tooltip bottom v-if="editP && props.item.start > formatTimestamp(new Date()) || editP && props.item.start > 0 && props.item.start  <= formatTimestamp(new Date()) && expireP">
                   <v-btn icon slot="activator" class="mx-0" @click.stop="editItem(props.item)">
@@ -318,15 +318,15 @@
             width: '300px',
           },
           {
-            text: '耗时',
-            align: 'center',
-            value: 'time',
-            width: '200px',
-          },
-          {
             text: '状态',
             align: 'center',
             value: 'status',
+          },
+          {
+            text: '计时',
+            align: 'center',
+            value: 'time',
+            width: '200px',
           },
           { text: 'Actions',
             align: 'center',
@@ -448,73 +448,8 @@
       this.openP = p['task.open'] !== undefined;
       this.doneP = p['task.done'] !== undefined;
 
-      new Promise((resolve) => {
-        const objs = [{
-          name: '无',
-          id: '0',
-        }];
-        this.$http.LGet(this.$store.state, '/user').then((resp) => {
-          switch (resp.data.code) {
-            case 0: {
-              resp.data.data.data.forEach((element) => {
-                objs.push({
-                  id: element.ID,
-                  name: element.RealName,
-                  usergroup: element.UserGroupID,
-                });
-              });
-              break;
-            }
-            default:
-              console.dir('服务器报错');
-          }
-          resolve({
-            objs,
-          });
-        }).catch(() => {
-          console.dir('服务器报错');
-          resolve({
-            objs,
-          });
-        });
-      }).then((data) => {
-        this.users = data.objs;
-      });
-
-
-      this.reloadTasks();
-
-      new Promise((resolve) => {
-        const objs = [{
-          name: '无',
-          id: '0',
-        }];
-        this.$http.LGet(this.$store.state, '/usergroup').then((resp) => {
-          switch (resp.data.code) {
-            case 0: {
-              resp.data.data.data.forEach((element) => {
-                objs.push({
-                  id: element.ID,
-                  name: element.Name,
-                });
-              });
-              break;
-            }
-            default:
-              console.dir('服务器报错');
-          }
-          resolve({
-            objs,
-          });
-        }).catch(() => {
-          console.dir('服务器报错');
-          resolve({
-            objs,
-          });
-        });
-      }).then((data) => {
-        this.usergroups = data.objs;
-      });
+      this.users = this.$store.state.users;
+      this.usergroups = this.$store.state.usergroups;
     },
 
     methods: {
@@ -1037,6 +972,9 @@
         return '未开始';
       },
       formatSecond(a) {
+        if (a < 0) {
+          a = a * -1;
+        }
         return `${(a / 86400).toFixed(2)} 天`;
       },
     },

@@ -429,6 +429,7 @@ func updatesTask(tx *Tx, child Task, id uint, del bool) {
 		if task.Status != 2 {
 			fmt.Println("updatesTask", "allok", allok, task.Status, "399")
 			task.Status = 2
+			task.RealEnd = time.Now().Unix()
 			need = true
 		}
 	} else {
@@ -436,6 +437,7 @@ func updatesTask(tx *Tx, child Task, id uint, del bool) {
 		if task.Status == 2 {
 			fmt.Println("updatesTask", "allok", allok, task.Status, "406")
 			task.Status = 3
+			task.RealEnd = 0
 			need = true
 		}
 	}
@@ -465,6 +467,7 @@ func TaskList(c *gin.Context) {
 	offsets := c.Query("offset")
 	limits := c.Query("limit")
 	all := c.Query("all")
+	pid := strings.TrimSpace(c.Query("pid"))
 	filter := strings.TrimSpace(c.Query("filter"))
 
 	offset := int64(-1)
@@ -481,6 +484,12 @@ func TaskList(c *gin.Context) {
 		query["description like ?"] = "%" + filter + "%"
 	}
 
+	if pid != "" {
+		query["parent_task_id = ? "] = pid
+	} else {
+		query["parent_task_id = ? "] = 0
+	}
+
 	session, _ := c.Get("Session")
 	list := c.DefaultQuery("list", "")
 	switch list {
@@ -493,7 +502,7 @@ func TaskList(c *gin.Context) {
 
 	objs := []Task{}
 	if all == "t" {
-		total, err := DBFind(tx.DB, new(Task), &objs, query, nil, c.Query("order"), offset, limit, true)
+		total, err := DBFind(tx.DB.LogMode(true), new(Task), &objs, query, nil, c.Query("order")+",-created_at", offset, limit, true)
 		if err != nil {
 			tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 		} else {

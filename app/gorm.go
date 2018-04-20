@@ -76,6 +76,7 @@ func DBFind(db *gorm.DB, obj, objs interface{}, where map[string]interface{}, or
 }
 
 func DBOLO(db *gorm.DB, order string, offset, limit int) *gorm.DB {
+	order = strings.Trim(order, ",")
 	if order != "" {
 		orders := strings.Split(order, ",")
 		for _, o := range orders {
