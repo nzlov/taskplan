@@ -502,7 +502,7 @@ func TaskList(c *gin.Context) {
 
 	objs := []Task{}
 	if all == "t" {
-		total, err := DBFind(tx.DB.LogMode(true), new(Task), &objs, query, nil, c.Query("order")+",-created_at", offset, limit, true)
+		total, err := DBFind(tx.DB, new(Task), &objs, query, nil, c.Query("order")+",-created_at", offset, limit, true)
 		if err != nil {
 			tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 		} else {

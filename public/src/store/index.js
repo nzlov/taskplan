@@ -36,6 +36,11 @@ const store = new Vuex.Store({
       },
       {
         icon: 'bubble_chart',
+        path: '/leave',
+        title: '请假',
+      },
+      {
+        icon: 'bubble_chart',
         path: '/holiday',
         title: '假期',
       },

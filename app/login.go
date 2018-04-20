@@ -70,6 +70,7 @@ func LoginEndpoint(c *gin.Context) {
 					"/",
 					"/user",
 					"/usergroup",
+					"/leave",
 					"/holiday",
 					"/role",
 					"/permission",
