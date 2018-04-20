@@ -4,12 +4,18 @@ import 'vuetify/dist/vuetify.min.css';
 
 import Vue from 'vue';
 import Vuetify from 'vuetify';
+
+import TaskTable from '@/components/TaskTable';
+
 import App from './App';
 import store from './store';
 import router from './router';
 import HttpUtil from './utils/http';
 
+
 Vue.use(Vuetify);
+
+Vue.component('task-table', TaskTable);
 
 Vue.config.productionTip = false;
 Vue.prototype.$http = HttpUtil;
