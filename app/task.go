@@ -53,28 +53,6 @@ type TaskEasy struct {
 	Name string
 }
 
-//任务间隔
-type TaskTimeRect struct {
-	Start int64
-	End   int64
-}
-
-type TaskTimeRects []TaskTimeRect
-
-func (j TaskTimeRects) Value() (driver.Value, error) {
-	return json.Marshal(&j)
-}
-
-// Scan scan value into Jsonb
-func (j *TaskTimeRects) Scan(value interface{}) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", value))
-	}
-
-	return json.Unmarshal(bytes, j)
-}
-
 type Task struct {
 	gorm.Model
 
@@ -92,8 +70,6 @@ type Task struct {
 	RealEnd int64 `description:"真正结束时间"`
 
 	Status int `description:"状态 1 创建 2 完成 3 重新开始"`
-
-	TimeRect TaskTimeRect `gorm:"type:jsonb" description:"任务时间段"`
 
 	TaskHistory []TaskHistory `gorm:"ASSOCIATION_AUTOUPDATE:false"`
 
