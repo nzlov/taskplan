@@ -399,6 +399,7 @@
         }
       },
       updateData() {
+        this.$store.commit('reloadusers');
         this.getDataFromApi()
         .then((data) => {
           this.items = data.items;

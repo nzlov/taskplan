@@ -151,142 +151,18 @@ export default {
       this.username = this.$store.state.username;
       this.realname = this.$store.state.realname;
       if (this.$store.state.login) {
-        const constmenu = [
-          {
-            icon: 'home',
-            path: '/',
-            title: '主页',
-          },
-          {
-            icon: 'assignment',
-            path: '/task',
-            title: '任务',
-          },
-          {
-            icon: 'person',
-            path: '/user',
-            title: '用户',
-          },
-          {
-            icon: 'account_box',
-            path: '/role',
-            title: '角色',
-          },
-          {
-            icon: 'group',
-            path: '/usergroup',
-            title: '用户组',
-          },
-          {
-            icon: 'bubble_chart',
-            path: '/permission',
-            title: '权限',
-          },
-        ];
         this.$store.state.menu.forEach((element) => {
-          for (const v of constmenu) {
+          for (const v of this.$store.state.constmenu) {
             if (v.path === element) {
               this.items.push(v);
               break;
             }
           }
         });
-        new Promise((resolve) => {
-          const objs = [{
-            name: '无',
-            id: '0',
-          }];
-          this.$http.LGet(this.$store.state, '/role').then((resp) => {
-            switch (resp.data.code) {
-              case 0: {
-                resp.data.data.data.forEach((element) => {
-                  objs.push({
-                    id: element.ID,
-                    name: element.Name,
-                  });
-                });
-                break;
-              }
-              default:
-                console.dir('服务器报错');
-            }
-            resolve({
-              objs,
-            });
-          }).catch(() => {
-            console.dir('服务器报错');
-            resolve({
-              objs,
-            });
-          });
-        }).then((data) => {
-          this.$store.state.roles = data.objs;
-        });
-
-        new Promise((resolve) => {
-          const objs = [{
-            name: '无',
-            id: '0',
-          }];
-          this.$http.LGet(this.$store.state, '/user').then((resp) => {
-            switch (resp.data.code) {
-              case 0: {
-                resp.data.data.data.forEach((element) => {
-                  objs.push({
-                    id: element.ID,
-                    name: element.Name,
-                  });
-                });
-                break;
-              }
-              default:
-                console.dir('服务器报错');
-            }
-            resolve({
-              objs,
-            });
-          }).catch(() => {
-            console.dir('服务器报错');
-            resolve({
-              objs,
-            });
-          });
-        }).then((data) => {
-          this.$store.state.users = data.objs;
-        });
-
-        new Promise((resolve) => {
-          const objs = [{
-            name: '无',
-            id: '0',
-          }];
-          this.$http.LGet(this.$store.state, '/usergroup').then((resp) => {
-            switch (resp.data.code) {
-              case 0: {
-                resp.data.data.data.forEach((element) => {
-                  objs.push({
-                    id: element.ID,
-                    name: element.Name,
-                  });
-                });
-                break;
-              }
-              default:
-                console.dir('服务器报错');
-            }
-            resolve({
-              objs,
-            });
-          }).catch(() => {
-            console.dir('服务器报错');
-            resolve({
-              objs,
-            });
-          });
-        }).then((data) => {
-          this.$store.state.usergroups = data.objs;
-        });
-
+        this.$store.commit('reloadusers');
+        this.$store.commit('reloadusergroups');
+        this.$store.commit('reloadroles');
+        this.$store.commit('reloadholidays');
         this.$router.replace('/');
       } else {
         this.$router.replace('/login');

@@ -34,6 +34,12 @@ func Router(app *gin.Engine) {
 	app.POST("/api/usergroup/:id", Auth("usergroup.update"), UserGroupUpdate)
 	app.DELETE("/api/usergroup/:id", Auth("usergroup.del"), UserGroupDel)
 
+	app.GET("/api/holiday", Auth("holiday.list"), HolidayList)
+	app.GET("/api/holiday/:id", Auth("holiday.info"), HolidayList)
+	app.POST("/api/holiday", Auth("holiday.add"), HolidayAdd)
+	app.POST("/api/holiday/:id", Auth("holiday.update"), HolidayUpdate)
+	app.DELETE("/api/holiday/:id", Auth("holiday.del"), HolidayDel)
+
 	app.GET("/api/task", Auth("task.list"), TaskList)
 	app.GET("/api/task/:id", Auth("task.info"), TaskList)
 	app.POST("/api/task", Auth("task.add"), TaskAdd)

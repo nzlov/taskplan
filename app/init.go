@@ -17,6 +17,7 @@ func Init(r *gin.Engine) {
 		new(UserGroup),
 		new(Task),
 		new(TaskHistory),
+		new(Holiday),
 	)
 	DB.InstantSet("gorm:auto_preload", true)
 

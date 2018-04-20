@@ -86,8 +86,8 @@
                         <span class="headline">计划开始时间</span>
                       </v-card-title>
                       <v-card-text>
-                        <v-date-picker v-model="startdate"></v-date-picker>
-                        <v-time-picker v-model="editedItem.starttime" format="24hr"></v-time-picker>
+                        <v-date-picker locale="zh-cn" :first-day-of-week="1" :allowed-dates="allowedDates" v-model="startdate"></v-date-picker>
+                        <v-time-picker locale="zh-cn" v-model="editedItem.starttime" format="24hr"></v-time-picker>
                       </v-card-text>
                     </v-card>
                     <div v-if="!editedItem.ptask" style="height: 10px">
@@ -98,8 +98,8 @@
                         <span class="headline">计划结束时间</span>
                       </v-card-title>
                       <v-card-text>
-                        <v-date-picker v-model="enddate"></v-date-picker>
-                        <v-time-picker v-model="editedItem.endtime" format="24hr"></v-time-picker>
+                        <v-date-picker locale="zh-cn" :first-day-of-week="1" :allowed-dates="allowedDates" v-model="enddate"></v-date-picker>
+                        <v-time-picker locale="zh-cn" v-model="editedItem.endtime" format="24hr"></v-time-picker>
                       </v-card-text>
                     </v-card>
                     <v-text-field
@@ -177,7 +177,7 @@
               <td class="text-xs-center">{{ props.item.starts }}</td>
               <td class="text-xs-center">{{ props.item.ends }}</td>
               <td class="text-xs-center">{{ props.item.realends }}</td>
-              <td class="text-xs-center">{{ props.item.statuss }}</td>
+              <td class="text-xs-center"> {{ props.item.statuss }}</td>
               <td class="text-xs-center">{{ props.item.time }}</td>
               <td class="justify-center layout px-0">
                 <v-tooltip bottom v-if="editP && props.item.start > formatTimestamp(new Date()) || editP && props.item.start > 0 && props.item.start  <= formatTimestamp(new Date()) && expireP">
@@ -972,10 +972,14 @@
         return '未开始';
       },
       formatSecond(a) {
-        if (a < 0) {
-          a = a * -1;
+        let s = a;
+        if (s < 0) {
+          s *= -1;
         }
-        return `${(a / 86400).toFixed(2)} 天`;
+        return `${(s / 86400).toFixed(2)} 天`;
+      },
+      allowedDates(v) {
+        return this.$store.state.holidays.indexOf(v) === -1;
       },
     },
   };

@@ -91,10 +91,10 @@
             <td>{{ props.item.name }}</td>
             <td class="text-xs-center">{{ props.item.tag }}</td>
             <td class="justify-center layout px-0">
-              <v-btn icon class="mx-0" @click="editItem(props.item)">
+              <v-btn v-if="editP" icon class="mx-0" @click="editItem(props.item)">
                 <v-icon color="teal">edit</v-icon>
               </v-btn>
-              <v-btn icon class="mx-0" @click="deleteItem(props.item)">
+              <v-btn v-if="delP" icon class="mx-0" @click="deleteItem(props.item)">
                 <v-icon color="pink">delete</v-icon>
               </v-btn>
             </td>
@@ -106,13 +106,14 @@
 
       </v-card>
       <v-btn
-              fixed
-              dark
-              fab
-              bottom
-              right
-              color="pink"
-              @click.native="newItem"
+        v-if="addP"
+        fixed
+        dark
+        fab
+        bottom
+        right
+        color="pink"
+        @click.native="newItem"
       >
       <v-icon>add</v-icon>
       </v-btn>
@@ -122,6 +123,9 @@
 
   export default {
     data: () => ({
+      addP: false,
+      editP: false,
+      delP: false,
       dialog: false,
       delDialog: false,
       delItem: {},
@@ -189,6 +193,10 @@
     },
 
     mounted() {
+      const p = this.$store.state.permissions;
+      this.addP = p['permission.add'] !== undefined;
+      this.editP = p['permission.update'] !== undefined;
+      this.delP = p['permission.del'] !== undefined;
     },
 
     methods: {

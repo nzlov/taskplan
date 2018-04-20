@@ -51,6 +51,12 @@ func LoginEndpoint(c *gin.Context) {
 					"usergroup.list":   struct{}{},
 					"usergroup.del":    struct{}{},
 
+					"holiday.add":    struct{}{},
+					"holiday.update": struct{}{},
+					"holiday.info":   struct{}{},
+					"holiday.list":   struct{}{},
+					"holiday.del":    struct{}{},
+
 					"task.add":    struct{}{},
 					"task.update": struct{}{},
 					"task.info":   struct{}{},
@@ -64,6 +70,7 @@ func LoginEndpoint(c *gin.Context) {
 					"/",
 					"/user",
 					"/usergroup",
+					"/holiday",
 					"/role",
 					"/permission",
 					"/task",

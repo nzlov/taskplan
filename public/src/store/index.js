@@ -16,7 +16,45 @@ const store = new Vuex.Store({
     menu: [],
     users: [],
     roles: [],
+    holidays: [],
     usergroups: [],
+    constmenu: [
+      {
+        icon: 'home',
+        path: '/',
+        title: '主页',
+      },
+      {
+        icon: 'assignment',
+        path: '/task',
+        title: '任务',
+      },
+      {
+        icon: 'person',
+        path: '/user',
+        title: '用户',
+      },
+      {
+        icon: 'bubble_chart',
+        path: '/holiday',
+        title: '假期',
+      },
+      {
+        icon: 'account_box',
+        path: '/role',
+        title: '角色',
+      },
+      {
+        icon: 'group',
+        path: '/usergroup',
+        title: '用户组',
+      },
+      {
+        icon: 'bubble_chart',
+        path: '/permission',
+        title: '权限',
+      },
+    ],
   },
   mutations: {
     init(state) {
@@ -25,10 +63,10 @@ const store = new Vuex.Store({
       if (datastr != null) {
         const data = JSON.parse(datastr);
         if (data.login) {
+          console.dir('check');
           HttpUtil.LGet(data, '/login').then((resp) => {
             switch (resp.data.code) {
               case 1000: {
-                console.dir('check');
                 state.id = data.id;
                 state.user = data.user;
                 state.token = data.token;
@@ -57,7 +95,6 @@ const store = new Vuex.Store({
       state.menu = data.menu;
       state.login = true;
       sessionStorage.session = JSON.stringify(state);
-      console.dir(sessionStorage.session);
     },
     logout(state) {
       console.dir('logout');
@@ -69,6 +106,148 @@ const store = new Vuex.Store({
       state.permissions = {};
       state.menu = [];
       sessionStorage.clear();
+    },
+    reloadusers(state) {
+      new Promise((resolve) => {
+        const objs = [{
+          name: '无',
+          id: '0',
+        }];
+        HttpUtil.LGet(state, '/user').then((resp) => {
+          switch (resp.data.code) {
+            case 0: {
+              resp.data.data.data.forEach((element) => {
+                objs.push({
+                  id: element.ID,
+                  name: element.RealName,
+                });
+              });
+              break;
+            }
+            default:
+              console.dir('服务器报错');
+          }
+          resolve({
+            objs,
+          });
+        }).catch(() => {
+          console.dir('服务器报错');
+          resolve({
+            objs,
+          });
+        });
+      }).then((data) => {
+        state.users = data.objs;
+      });
+    },
+    reloadusergroups(state) {
+      new Promise((resolve) => {
+        const objs = [{
+          name: '无',
+          id: '0',
+        }];
+        HttpUtil.LGet(state, '/usergroup').then((resp) => {
+          switch (resp.data.code) {
+            case 0: {
+              resp.data.data.data.forEach((element) => {
+                objs.push({
+                  id: element.ID,
+                  name: element.Name,
+                });
+              });
+              break;
+            }
+            default:
+              console.dir('服务器报错');
+          }
+          resolve({
+            objs,
+          });
+        }).catch(() => {
+          console.dir('服务器报错');
+          resolve({
+            objs,
+          });
+        });
+      }).then((data) => {
+        state.usergroups = data.objs;
+      });
+    },
+    reloadroles(state) {
+      new Promise((resolve) => {
+        const objs = [{
+          name: '无',
+          id: '0',
+        }];
+        HttpUtil.LGet(state, '/role').then((resp) => {
+          switch (resp.data.code) {
+            case 0: {
+              resp.data.data.data.forEach((element) => {
+                objs.push({
+                  id: element.ID,
+                  name: element.Name,
+                });
+              });
+              break;
+            }
+            default:
+              console.dir('服务器报错');
+          }
+          resolve({
+            objs,
+          });
+        }).catch(() => {
+          console.dir('服务器报错');
+          resolve({
+            objs,
+          });
+        });
+      }).then((data) => {
+        state.roles = data.objs;
+      });
+    },
+    reloadholidays(state) {
+      const formatDate = (d) => {
+        if (d <= 0) {
+          return '';
+        }
+        const now = new Date(d * 1000);
+        const year = now.getFullYear();
+        let month = now.getMonth() + 1;
+        let date = now.getDate();
+        if (month <= 9) {
+          month = `0${month}`;
+        }
+        if (date <= 9) {
+          date = `0${date}`;
+        }
+        return `${year}-${month}-${date}`;
+      };
+      new Promise((resolve) => {
+        const objs = [];
+        HttpUtil.LGet(state, '/holiday').then((resp) => {
+          switch (resp.data.code) {
+            case 0: {
+              resp.data.data.data.forEach((element) => {
+                objs.push(formatDate(element.Day));
+              });
+              break;
+            }
+            default:
+              console.dir('服务器报错');
+          }
+          resolve({
+            objs,
+          });
+        }).catch(() => {
+          console.dir('服务器报错');
+          resolve({
+            objs,
+          });
+        });
+      }).then((data) => {
+        state.holidays = data.objs;
+      });
     },
   },
 });

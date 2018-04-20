@@ -218,10 +218,15 @@ func UserDel(c *gin.Context) {
 		return
 	}
 	form := User{}
-	form.ID = uint(id)
+	err = tx.DB.First(&form, id).Error
+	if err != nil {
+		tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
+		return
+	}
 	err = tx.DB.Delete(&form).Error
 	if err != nil {
 		tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 	}
+	Cache.Delete(form.Name)
 	tx.Ok(CodeOK, nil)
 }
