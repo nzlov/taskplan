@@ -223,8 +223,8 @@ export default {
       ptaskloading: false,
       ptasksearch: null,
       tasks: [{
-          name: '无',
-          id: '0',
+        name: '无',
+        id: '0',
       }],
       tasknames: [],
       taskids: [],
@@ -527,9 +527,10 @@ export default {
       if (!id && !this.ptasksearch) {
         return;
       }
-      if (!id){
+      if (!id) {
         return;
-      } else {
+      }
+      if (id) {
         if (this.taskids.indexOf(id) > -1) {
           return;
         }
@@ -553,7 +554,7 @@ export default {
           switch (resp.data.code) {
             case 0: {
               resp.data.data.data.forEach((element) => {
-                if (this.tasknames.indexOf(element.name) == -1) {
+                if (this.tasknames.indexOf(element.name) === -1) {
                   this.tasknames.push(element.name);
                   this.taskids.push(element.ID);
                   this.tasks.push({
@@ -576,7 +577,7 @@ export default {
             objs,
           });
         });
-      }).then((data) => {
+      }).then(() => {
         this.ptaskloading = false;
       });
     },
