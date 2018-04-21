@@ -141,18 +141,24 @@
           <v-progress-linear style="margin-bottom: 0px;" :indeterminate="true" :active="commit"></v-progress-linear>
         </v-card>
       </v-dialog>
-      <!-- 表格 -->
-      <task-table 
-        :editP="editP" 
-        :openP="openP" 
-        :doneP="doneP" 
-        :expireP="expireP" 
-        :delP="delP"
-        :editItem="editItem"
-        :openItem="openItem"
-        :doneItem="doneItem"
-        :delItem="deleteItem"
-      ></task-table>
+      <!-- Main -->
+      <v-card>
+        <v-card-title>
+          <v-switch :label="'颜色'" v-model="showcolor"></v-switch>
+        </v-card-title>
+        <task-table 
+          :editP="editP" 
+          :openP="openP" 
+          :doneP="doneP" 
+          :expireP="expireP" 
+          :delP="delP"
+          :showcolor="showcolor"
+          :editItem="editItem"
+          :openItem="openItem"
+          :doneItem="doneItem"
+          :delItem="deleteItem"
+        ></task-table>
+      </v-card>
       <v-btn
         v-if="addP"
         fixed
@@ -174,6 +180,7 @@ import DateUtil from '../utils/date';
 export default {
   data() {
     return {
+      showcolor: false,
       dialog: false,
       dialog2: false,
       valid: true,
@@ -342,7 +349,11 @@ export default {
                 this.alert_error = true;
             }
             this.commit = false;
-          }).catch(() => {
+          }).catch((e) => {
+            if (e.response.data.code === 101) {
+              this.$store.commit('logout');
+              this.$router.replace('/login');
+            }
             this.message = '服务器错误606';
             this.alert_error = true;
             this.commit = false;
@@ -364,7 +375,11 @@ export default {
                 this.alert_error = true;
             }
             this.commit = false;
-          }).catch(() => {
+          }).catch((e) => {
+            if (e.response.data.code === 101) {
+              this.$store.commit('logout');
+              this.$router.replace('/login');
+            }
             this.message = '服务器错误628';
             this.alert_error = true;
             this.commit = false;
@@ -386,7 +401,11 @@ export default {
                 this.alert_errosr = true;
             }
             this.commit = false;
-          }).catch(() => {
+          }).catch((e) => {
+            if (e.response.data.code === 101) {
+              this.$store.commit('logout');
+              this.$router.replace('/login');
+            }
             this.message = '服务器错误650';
             this.alert_error = true;
             this.commit = false;
@@ -472,6 +491,10 @@ export default {
             }
             this.commit = false;
           }).catch((e) => {
+            if (e.response.data.code === 101) {
+              this.$store.commit('logout');
+              this.$router.replace('/login');
+            }
             this.message = e.response.data.data;
             this.alert_error = true;
             this.commit = false;
@@ -514,7 +537,11 @@ export default {
                 this.alert_error = true;
             }
             this.commit = false;
-          }).catch(() => {
+          }).catch((e) => {
+            if (e.response.data.code === 101) {
+              this.$store.commit('logout');
+              this.$router.replace('/login');
+            }
             this.message = '服务器错误778';
             this.alert_error = true;
             this.commit = false;
@@ -523,7 +550,6 @@ export default {
       }
     },
     reloadTasks(id) {
-      console.dir(id);
       if (!id && !this.ptasksearch) {
         return;
       }
@@ -571,8 +597,12 @@ export default {
           resolve({
             objs,
           });
-        }).catch(() => {
+        }).catch((e) => {
           console.dir('服务器报错');
+          if (e.response.data.code === 101) {
+            this.$store.commit('logout');
+            this.$router.replace('/login');
+          }
           resolve({
             objs,
           });

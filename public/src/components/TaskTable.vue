@@ -29,7 +29,7 @@
             class="elevation-1"
         >
             <template slot="items" slot-scope="props">
-            <tr @click="props.expanded = !props.expanded">
+            <tr @click="props.expanded = !props.expanded" :style="genbackground(props.item)">
                 <td>{{ props.item.name }}</td>
                 <td class="text-xs-center">{{ props.item.usergroup }}</td>
                 <td class="text-xs-center">{{ props.item.user }}</td>
@@ -78,6 +78,7 @@
                       :expireP="expireP" 
                       :delP="delP" 
                       :pid="props.item.id"
+                      :showcolor="showcolor"
                       :editItem="editItem"
                       :openItem="openItem"
                       :doneItem="doneItem"
@@ -98,7 +99,7 @@
                 </v-card>
             </template>
             <v-alert slot="no-data" :value="true" color="error" icon="warning">
-                没有数据
+                {{nodata}}
             </v-alert>
         </v-data-table>
     </v-card>
@@ -126,6 +127,9 @@ export default {
     },
     pid: {
       defalut: '',
+    },
+    showcolor: {
+      defalut: false,
     },
     editItem: Function,
     openItem: Function,
@@ -167,6 +171,7 @@ export default {
           align: 'center',
           value: 'created_at',
           width: '300px',
+          sortable: true,
         },
         {
           text: '计划开始时间',
@@ -252,6 +257,7 @@ export default {
           value: '',
         },
       ],
+      nodata: '没有数据',
     };
   },
 
@@ -351,15 +357,20 @@ export default {
                 this.alert_error = true;
                 this.login = false;
             }
+            if (items.length === 0) {
+              this.nodata = '没有数据';
+            }
             resolve({
               items,
               total,
             });
-          })
-          .catch((e) => {
+          }).catch((e) => {
             this.loading = false;
-            console.dir('服务器报错');
-            console.dir(e);
+            if (e.response.data.code === 101) {
+              this.$store.commit('logout');
+              this.$router.replace('/login');
+            }
+            this.nodata = '服务器报错';
             resolve({
               items,
               total,
@@ -375,21 +386,77 @@ export default {
     },
     // 格式化任务Status
     formatStatus(v) {
+      const curr = this.formatTimestamp(new Date());
       switch (v.Status) {
         case 1: {
-          if (v.Start > this.formatTimestamp(new Date())) {
+          if (v.Start > curr) {
             return '计划中';
+          }
+          if (v.End < curr + 7200) {
+            if (v.End < curr) {
+              return '已超期';
+            }
+            return '临近过期';
           }
           return '进行中';
         }
         case 2: {
-          return '已完成';
+          // TODO 提前与超期的判断条件
+          if (v.End <= v.RealEnd - 3600) {
+            return '超期完成';
+          }
+          if (v.End > v.RealEnd + 3600) {
+            return '提前完成';
+          }
+          return '按时完成';
         }
         case 3: {
+          if (v.End < curr) {
+            return '重新打开并超期';
+          }
           return '重新打开';
         }
         default: {
           return `未知类型[${v}]`;
+        }
+      }
+    },
+    genbackground(v) {
+      const curr = this.formatTimestamp(new Date());
+      if (!this.showcolor) {
+        return {};
+      }
+      switch (v.status) {
+        case 1: {
+          if (v.start > curr) {
+            return { background: '#99CCFF' };
+          }
+          if (v.end < curr + 7200) {
+            if (v.end < curr) {
+              return { background: '#FF0033' };
+            }
+            return { background: '#FF6600' };
+          }
+          return { background: '#66CC99' };
+        }
+        case 2: {
+          // TODO 提前与超期的判断条件
+          if (v.end <= v.realen - 3600) {
+            return { background: '#FF6666' };
+          }
+          if (v.end > v.realend + 3600) {
+            return { background: '#33CC99' };
+          }
+          return { background: '#009933' };
+        }
+        case 3: {
+          if (v.end < curr) {
+            return { background: '#CC0066' };
+          }
+          return { background: '#009999' };
+        }
+        default: {
+          return {};
         }
       }
     },
