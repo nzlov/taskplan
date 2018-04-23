@@ -30,11 +30,11 @@
         >
             <template slot="items" slot-scope="props">
             <tr @click="props.expanded = !props.expanded" :style="genbackground(props.item)">
-                <td>{{ props.item.name }}</td>
+                <td>{{ props.item.creates }}</td>
+                <td class="text-xs-center">{{ props.item.name }}</td>
                 <td class="text-xs-center">{{ props.item.usergroup }}</td>
                 <td class="text-xs-center">{{ props.item.user }}</td>
                 <td class="text-xs-center">{{ props.item.createuser }}</td>
-                <td class="text-xs-center">{{ props.item.creates }}</td>
                 <td class="text-xs-center">{{ props.item.starts }}</td>
                 <td class="text-xs-center">{{ props.item.ends }}</td>
                 <td class="text-xs-center">{{ props.item.realends }}</td>
@@ -140,6 +140,12 @@ export default {
     return {
       headers: [
         {
+          text: '创建时间',
+          align: 'center',
+          value: 'created_at',
+          width: '300px',
+        },
+        {
           text: '任务',
           align: 'left',
           value: 'name',
@@ -165,13 +171,6 @@ export default {
           value: 'create_user_id',
           width: '120px',
           sortable: false,
-        },
-        {
-          text: '创建时间',
-          align: 'center',
-          value: 'created_at',
-          width: '300px',
-          sortable: true,
         },
         {
           text: '计划开始时间',

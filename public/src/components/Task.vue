@@ -157,6 +157,7 @@
           :openItem="openItem"
           :doneItem="doneItem"
           :delItem="deleteItem"
+          ref="tasktable"
         ></task-table>
       </v-card>
       <v-btn
@@ -340,7 +341,7 @@ export default {
             this.commit = false;
             switch (resp.data.code) {
               case 0: {
-                this.updateData();
+                this.$refs.tasktable.updateData();
                 this.close();
                 break;
               }
@@ -476,7 +477,7 @@ export default {
             this.commit = false;
             switch (resp.data.code) {
               case 0: {
-                this.updateData();
+                this.$refs.tasktable.updateData();
                 this.close();
                 break;
               }
@@ -491,6 +492,7 @@ export default {
             }
             this.commit = false;
           }).catch((e) => {
+            console.dir(e);
             if (e.response.data.code === 101) {
               this.$store.commit('logout');
               this.$router.replace('/login');
@@ -522,7 +524,7 @@ export default {
             this.commit = false;
             switch (resp.data.code) {
               case 0: {
-                this.updateData();
+                this.$refs.tasktable.updateData();
                 this.reloadTasks();
                 this.close();
                 break;
