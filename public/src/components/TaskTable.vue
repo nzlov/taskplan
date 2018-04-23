@@ -30,11 +30,11 @@
         >
             <template slot="items" slot-scope="props">
             <tr @click="props.expanded = !props.expanded" :style="genbackground(props.item)">
-                <td>{{ props.item.creates }}</td>
-                <td class="text-xs-center">{{ props.item.name }}</td>
+                <td>{{ props.item.name }}</td>
                 <td class="text-xs-center">{{ props.item.usergroup }}</td>
                 <td class="text-xs-center">{{ props.item.user }}</td>
                 <td class="text-xs-center">{{ props.item.createuser }}</td>
+                <td class="text-xs-center">{{ props.item.creates }}</td>
                 <td class="text-xs-center">{{ props.item.starts }}</td>
                 <td class="text-xs-center">{{ props.item.ends }}</td>
                 <td class="text-xs-center">{{ props.item.realends }}</td>
@@ -140,12 +140,6 @@ export default {
     return {
       headers: [
         {
-          text: '创建时间',
-          align: 'center',
-          value: 'created_at',
-          width: '300px',
-        },
-        {
           text: '任务',
           align: 'left',
           value: 'name',
@@ -173,22 +167,28 @@ export default {
           sortable: false,
         },
         {
+          text: '创建时间',
+          align: 'center',
+          value: 'created_at',
+          width: '150px',
+        },
+        {
           text: '计划开始时间',
           align: 'center',
           value: 'start',
-          width: '300px',
+          width: '150px',
         },
         {
           text: '计划结束时间',
           align: 'center',
           value: 'end',
-          width: '300px',
+          width: '150px',
         },
         {
           text: '真正结束时间',
           align: 'center',
           value: 'real_end',
-          width: '300px',
+          width: '150px',
         },
         {
           text: '状态',
@@ -240,7 +240,13 @@ export default {
       totalItems: 0,
       items: [],
       loading: true,
-      pagination: {},
+      pagination: {
+        descending: false,
+        page: 1,
+        rowsPerPage: 10,
+        sortBy: 'created_at',
+        totalItems: 0,
+      },
       listtype: 'self',
       listtypes: [
         {
@@ -272,6 +278,7 @@ export default {
     },
     pagination: {
       handler() {
+        console.dir(this.pagination);
         this.updateData();
       },
       deep: true,
@@ -400,7 +407,6 @@ export default {
           return '进行中';
         }
         case 2: {
-          // TODO 提前与超期的判断条件
           if (v.End <= v.RealEnd - 3600) {
             return '超期完成';
           }
@@ -428,30 +434,38 @@ export default {
       switch (v.status) {
         case 1: {
           if (v.start > curr) {
+            // 计划中
             return { background: '#99CCFF' };
           }
           if (v.end < curr + 7200) {
             if (v.end < curr) {
+              // 已超期
               return { background: '#FF0033' };
             }
+            // 临近过期
             return { background: '#FF6600' };
           }
+          // 进行中
           return { background: '#66CC99' };
         }
         case 2: {
-          // TODO 提前与超期的判断条件
+          // 超期完成
           if (v.end <= v.realend - 3600) {
             return { background: '#FF6666' };
           }
+          // 提前完成
           if (v.end > v.realend + 3600) {
             return { background: '#33CC99' };
           }
+          // 按时完成
           return { background: '#009933' };
         }
         case 3: {
           if (v.end < curr) {
+            // 重新打开并超期
             return { background: '#CC0066' };
           }
+          // 重新打开
           return { background: '#009999' };
         }
         default: {
