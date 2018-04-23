@@ -527,9 +527,7 @@ export default {
           });
 
           if (newTimeRect.length > 0) {
-            newTimeRect.sort((a,b) => {
-              return a.Start - b.Start;
-            });
+            newTimeRect.sort((a, b) => a.Start - b.Start);
             d.timerect = newTimeRect;
             has = true;
           }
