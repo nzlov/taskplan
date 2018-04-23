@@ -496,16 +496,43 @@ func updatesTask(tx *Tx, child Task, id uint, del bool) {
 
 func TaskList(c *gin.Context) {
 	tx := NewTx(c)
-	id := c.Param("id")
 	query := map[string]interface{}{}
+	all := c.Query("all")
+	objs := []Task{}
+
+	id := c.Param("id")
 	if id != "" {
 		query["id = ?"] = id
 	}
+	or := []map[string]interface{}{}
+	filter := strings.TrimSpace(c.Query("filter"))
+	if filter != "" {
+		or = append(or, map[string]interface{}{
+			"name like ?": "%" + filter + "%",
+		})
+		or = append(or, map[string]interface{}{
+			"description like ?": "%" + filter + "%",
+		})
+	}
+	if all != "t" {
+		total, err := DBFind(tx.DB, new(Task), &objs, query, or, c.Query("order"), -1, -1, true)
+		if err != nil {
+			tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
+		} else {
+			o := []TaskEasy{}
+			d, _ := json.Marshal(objs)
+			json.Unmarshal(d, &o)
+
+			tx.Ok(CodeOK, map[string]interface{}{
+				"total": total,
+				"data":  o,
+			})
+		}
+		return
+	}
 	offsets := c.Query("offset")
 	limits := c.Query("limit")
-	all := c.Query("all")
 	pid := strings.TrimSpace(c.Query("pid"))
-	filter := strings.TrimSpace(c.Query("filter"))
 
 	offset := int64(-1)
 	if strings.TrimSpace(offsets) != "" {
@@ -514,11 +541,6 @@ func TaskList(c *gin.Context) {
 	limit := int64(-1)
 	if strings.TrimSpace(limits) != "" {
 		limit, _ = strconv.ParseInt(limits, 10, 64)
-	}
-
-	if filter != "" {
-		query["name like ?"] = "%" + filter + "%"
-		query["description like ?"] = "%" + filter + "%"
 	}
 
 	if pid != "" {
@@ -537,32 +559,14 @@ func TaskList(c *gin.Context) {
 
 	}
 
-	objs := []Task{}
-	if all == "t" {
-		total, err := DBFind(tx.DB.LogMode(true), new(Task), &objs, query, nil, c.Query("order")+",-created_at", offset, limit, true)
-		if err != nil {
-			tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
-		} else {
-			tx.Ok(CodeOK, map[string]interface{}{
-				"total": total,
-				"data":  objs,
-			})
-		}
+	total, err := DBFind(tx.DB, new(Task), &objs, query, or, c.Query("order")+",-created_at", offset, limit, true)
+	if err != nil {
+		tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 	} else {
-		total, err := DBFind(tx.DB, new(Task), &objs, query, nil, c.Query("order"), -1, -1, true)
-		if err != nil {
-			tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
-		} else {
-			o := []TaskEasy{}
-			d, _ := json.Marshal(objs)
-			fmt.Println(string(d))
-			json.Unmarshal(d, &o)
-
-			tx.Ok(CodeOK, map[string]interface{}{
-				"total": total,
-				"data":  o,
-			})
-		}
+		tx.Ok(CodeOK, map[string]interface{}{
+			"total": total,
+			"data":  objs,
+		})
 	}
 }
 func TaskDel(c *gin.Context) {

@@ -309,7 +309,11 @@
                   this.alert_error = true;
               }
               this.commit = false;
-            }).catch(() => {
+            }).catch((e) => {
+              if (e.response.data.code === 101) {
+                this.$store.commit('logout');
+                this.$router.replace('/login');
+              }
               this.message = '服务器错误';
               this.alert_error = true;
               this.commit = false;
@@ -330,7 +334,11 @@
                   this.alert_error = true;
               }
               this.commit = false;
-            }).catch(() => {
+            }).catch((e) => {
+              if (e.response.data.code === 101) {
+                this.$store.commit('logout');
+                this.$router.replace('/login');
+              }
               this.message = '服务器错误';
               this.alert_error = true;
               this.commit = false;
@@ -352,7 +360,11 @@
                   this.alert_errosr = true;
               }
               this.commit = false;
-            }).catch(() => {
+            }).catch((e) => {
+              if (e.response.data.code === 101) {
+                this.$store.commit('logout');
+                this.$router.replace('/login');
+              }
               this.message = '服务器错误';
               this.alert_error = true;
               this.commit = false;
@@ -390,7 +402,11 @@
                   this.alert_error = true;
               }
               this.commit = false;
-            }).catch(() => {
+            }).catch((e) => {
+              if (e.response.data.code === 101) {
+                this.$store.commit('logout');
+                this.$router.replace('/login');
+              }
               this.message = '服务器错误';
               this.alert_error = true;
               this.commit = false;
@@ -450,6 +466,10 @@
               total,
             });
           }).catch((e) => {
+            if (e.response.data.code === 101) {
+              this.$store.commit('logout');
+              this.$router.replace('/login');
+            }
             this.loading = false;
             console.dir('服务器报错');
             console.dir(e);
