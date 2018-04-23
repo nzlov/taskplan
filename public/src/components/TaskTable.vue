@@ -440,7 +440,7 @@ export default {
         }
         case 2: {
           // TODO 提前与超期的判断条件
-          if (v.end <= v.realen - 3600) {
+          if (v.end <= v.realend - 3600) {
             return { background: '#FF6666' };
           }
           if (v.end > v.realend + 3600) {
