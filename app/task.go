@@ -55,9 +55,8 @@ type TaskEasy struct {
 
 //任务间隔
 type TaskTimeRect struct {
-	Start  int64
-	End    int64
-	Delete bool
+	Start int64
+	End   int64
 }
 
 func (t TaskTimeRect) toString() string {
@@ -170,7 +169,7 @@ func TaskAdd(c *gin.Context) {
 				New:   parent.Name,
 			})
 		}
-		task.TimeRect = genTaskTimeRect(tx, &task)
+		resizeTaskTimeRect(tx, &task)
 		err = DB.Create(&task).Error
 		if err != nil {
 			tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
@@ -222,14 +221,15 @@ func TaskUpdate(c *gin.Context) {
 	}
 
 	obj := struct {
-		Name        *string `form:"name"`
-		UserGroupID *uint   `form:"usergroupid"`
-		UserID      *uint   `form:"userid"`
-		TaskID      *uint   `form:"taskid"`
-		Description *string `form:"description" description:"任务描述"`
-		Start       *int64  `form:"start" description:"开始时间"`
-		End         *int64  `form:"end" description:"结束时间"`
-		Remark      *string `form:"remark" description:"备注"`
+		Name        *string        `form:"name"`
+		UserGroupID *uint          `form:"usergroupid"`
+		UserID      *uint          `form:"userid"`
+		TaskID      *uint          `form:"taskid"`
+		Description *string        `form:"description" description:"任务描述"`
+		Start       *int64         `form:"start" description:"开始时间"`
+		End         *int64         `form:"end" description:"结束时间"`
+		Remark      *string        `form:"remark" description:"备注"`
+		TimeRect    *TaskTimeRects `form:"timerect" description:"任务时间段"`
 	}{}
 	otaskid := task.ParentTaskID
 
@@ -375,6 +375,19 @@ func TaskUpdate(c *gin.Context) {
 			need = true
 			needTime = true
 		}
+		if obj.TimeRect != nil {
+			items = append(items, HistoryItem{
+				Field: "结束时间",
+				Old:   task.TimeRect,
+				New:   *obj.TimeRect,
+			})
+			task.TimeRect = *obj.TimeRect
+			has = true
+		}
+		if task.Start > task.End {
+			tx.Error(http.StatusBadRequest, CodeParamsError, "start > end")
+			return
+		}
 		if has {
 			task.TaskHistory = append(task.TaskHistory, TaskHistory{
 				Action: 2,
@@ -382,7 +395,7 @@ func TaskUpdate(c *gin.Context) {
 				Items:  items,
 			})
 			if needTime && !task.PTask {
-				task.TimeRect = genTaskTimeRect(tx, &task)
+				resizeTaskTimeRect(tx, &task)
 			}
 			err = tx.DB.Save(&task).Error
 			if err != nil {
@@ -711,110 +724,169 @@ func formatTime(t int64) string {
 	return time.Unix(t, 0).Format("2006-01-02 15:04:05")
 }
 
-func genTaskTimeRect(tx *Tx, task *Task) TaskTimeRects {
-	ts := TaskTimeRects{}
-	if task.Start == 0 || task.End == 0 {
-		return ts
-	}
-	dmap := map[string]struct{}{}
-	for _, v := range task.TimeRect {
-		dmap[v.toString()] = struct{}{}
-	}
-
+// 任务时间间隔缩放
+func resizeTaskTimeRect(tx *Tx, task *Task) {
 	//获取假日安排
 	holidays := []Holiday{}
 	err := tx.DB.Where("day between ? and ?", task.Start, task.End).Find(&holidays).Order("day").Error
 	if err != nil {
 		fmt.Println("genTaskTimeRect:", err.Error())
-		return ts
+		return
 	}
 	holidaymap := map[string]struct{}{}
 	for _, v := range holidays {
 		holidaymap[time.Unix(v.Day, 0).Format("20006-01-02")] = struct{}{}
 	}
 
-	ts = append(ts, gentimerect(task, task.Start, task.End)...)
+	if len(task.TimeRect) == 0 {
+		task.TimeRect = genTaskTimeRect(holidaymap, task.Start, task.End)
+		return
+	}
+	newTimeRects := []TaskTimeRect{}
+	ostart := task.TimeRect[0].Start
+	oend := task.TimeRect[len(task.TimeRect)-1].End
 
-	startTime := time.Unix(task.Start, 0)
-	endTime := time.Unix(task.End, 0)
+	fmt.Println("resizeTaskTimeRect:", ostart, oend, time.Unix(ostart, 0).Format("2006-01-02 15:04:05"), time.Unix(oend, 0).Format("2006-01-02 15:04:05"))
+	fmt.Println("=> resizeTaskTimeRect:", task.Start, task.End, time.Unix(task.Start, 0).Format("2006-01-02 15:04:05"), time.Unix(task.End, 0).Format("2006-01-02 15:04:05"))
+
+	// 扩展开始部分
+	if task.Start < ostart {
+		newTimeRects = append(newTimeRects, genTaskTimeRect(holidaymap, task.Start, ostart)...)
+	}
+
+	for _, v := range task.TimeRect {
+		if v.Start >= task.Start {
+			newTimeRects = append(newTimeRects, v)
+		}
+	}
+
+	// 扩展结束部分
+	if task.End > oend {
+		newTimeRects = append(newTimeRects, genTaskTimeRect(holidaymap, oend, task.End)...)
+	}
+
+	tr := []TaskTimeRect{}
+	trl := len(newTimeRects)
+	for i := 0; i < trl; i++ {
+		//如果两个时间段差1s则连接时间段
+		n := newTimeRects[i]
+
+		if n.Start > task.End {
+			continue
+		}
+		if i+1 < trl {
+			if n.End+1 == newTimeRects[i+1].Start {
+				n.End = newTimeRects[i+1].End
+				i++
+			}
+		}
+		if n.End > task.End {
+			n.End = task.End
+		}
+		if n.Start == n.End {
+			continue
+		}
+		tr = append(tr, n)
+	}
+
+	task.TimeRect = TaskTimeRects(tr)
+}
+
+// 生成任务的时间间隔
+func genTaskTimeRect(holidaymap map[string]struct{}, start, end int64) (ts []TaskTimeRect) {
+	if start == 0 || end == 0 {
+		return
+	}
+	if start > end {
+		return
+	}
+	fmt.Println("genTaskTimeRect:", time.Unix(start, 0).Format("2006-01-02 15:04:05"), time.Unix(end, 0).Format("2006-01-02 15:04:05"))
+
+	ts = append(ts, gentimerect(start, end)...)
+
+	startTime := time.Unix(start, 0)
+	endTime := time.Unix(end, 0)
 	//判断当前日期加一天后是否大于结束日期
 	//如果大于结束日期开始计算last日期的时间段
 	//循环
 	last := startTime.AddDate(0, 0, 1)
-	last, err = time.Parse("2006-01-02 15:04:05", last.Format("2006-01-02")+" 08:29:59")
+	last, err := time.ParseInLocation("2006-01-02 15:04:05", last.Format("2006-01-02")+" 08:29:59", time.Local)
+	if err != nil {
+		fmt.Println("genTaskTimeRect:", err.Error())
+		return
+	}
 	v := last.Sub(endTime)
+
 	for v < 0 {
 		//获取last的年月日
 		lastYMD := last.Format("2006-01-02")
 		if _, ok := holidaymap[lastYMD]; !ok {
-			ts = append(ts, gentimerect(task, last.Unix(), task.End)...)
+			ts = append(ts, gentimerect(last.Unix(), end)...)
 		}
-		last = last.AddDate(0, 0, 1)
+		last, _ = time.ParseInLocation("2006-01-02 15:04:05", last.AddDate(0, 0, 1).Format("2006-01-02")+" 08:30:00", time.Local)
 		v = last.Sub(endTime)
 	}
-	for i, v := range ts {
-		if _, ok := dmap[v.toString()]; ok {
-			ts[i].Delete = true
-		}
-	}
-	return ts
+	return
 }
-func gentimerect(task *Task, start, end int64) TaskTimeRects {
+func gentimerect(start, end int64) TaskTimeRects {
 	ts := TaskTimeRects{}
 
 	startTime := time.Unix(start, 0)
 	ymd := startTime.Format("2006-01-02")
-	ams, err := time.Parse("2006-01-02 15:04:05", ymd+" 08:30:00")
-	if err != nil {
-		panic(err)
-	}
-	ames := ams.Unix()
-	ame, err := time.Parse("2006-01-02 15:04:05", ymd+" 12:00:00")
+	rgCheck := time.Unix(end, 0).Format("2006-01-02") == ymd
+	//	ams, err := time.ParseInLocation("2006-01-02 15:04:05", ymd+" 08:30:00", loc)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	ames := ams.Unix()
+	ame, err := time.ParseInLocation("2006-01-02 15:04:05", ymd+" 12:00:00", time.Local)
 	if err != nil {
 		panic(err)
 	}
 	amet := ame.Unix()
 
 	//start时间在早上8点半之前则从8:30开始，否则用start时间
-	if ames < start {
-		ames = start
-	}
+	//	if ames < start {
+	//		ames = start
+	//	} else if !rgCheck {
+	//		ames = start
+	//	}
 	// nstart 是否在上午
-	if ames < amet {
+	if start < amet {
 		// end时间是否超过上午下班点
 		if amet < end {
 			ts = append(ts, TaskTimeRect{
-				Start: ames,
+				Start: start,
 				End:   amet,
 			})
 		} else {
 			ts = append(ts, TaskTimeRect{
-				Start: ames,
+				Start: start,
 				End:   end,
 			})
 			return ts
 		}
 	}
 
-	pms, err := time.Parse("2006-01-02 15:04:05", ymd+PM.start)
+	pms, err := time.ParseInLocation("2006-01-02 15:04:05", ymd+PM.start, time.Local)
 	if err != nil {
 		panic(err)
 	}
 	pmes := pms.Unix()
-	pme, err := time.Parse("2006-01-02 15:04:05", ymd+PM.end)
+	pme, err := time.ParseInLocation("2006-01-02 15:04:05", ymd+PM.end, time.Local)
 	if err != nil {
 		panic(err)
 	}
 	pmet := pme.Unix()
 
-	//start时间在早上8点半之前则从8:30开始，否则用start时间
 	if pmes < start {
 		pmes = start
 	}
-	// nstart 是否在上午
 	if pmes < pmet {
-		// end时间是否超过上午下班点
 		if pmet < end {
+			if rgCheck {
+				pmet = end
+			}
 			ts = append(ts, TaskTimeRect{
 				Start: pmes,
 				End:   pmet,
@@ -822,7 +894,7 @@ func gentimerect(task *Task, start, end int64) TaskTimeRects {
 		} else {
 			ts = append(ts, TaskTimeRect{
 				Start: pmes,
-				End:   pmet,
+				End:   end,
 			})
 			return ts
 		}

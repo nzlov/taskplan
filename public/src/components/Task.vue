@@ -94,16 +94,38 @@
                         <v-time-picker locale="zh-cn" v-model="editedItem.starttime" format="24hr"></v-time-picker>
                       </v-card-text>
                     </v-card>
-                    <div v-if="!editedItem.ptask" style="height: 10px">
-                    </div>
+                    <div v-if="!editedItem.ptask" style="height: 10px"></div>
                     <h2 v-else>父级任务不能手动修改时间</h2>
                     <v-card v-if="!editedItem.ptask">
                       <v-card-title>
                         <span class="headline">计划结束时间</span>
                       </v-card-title>
                       <v-card-text>
-                        <v-date-picker locale="zh-cn" :first-day-of-week="1" :allowed-dates="allowedDates" min="8:30" max="18:00" v-model="enddate"></v-date-picker>
+                        <v-date-picker locale="zh-cn" :first-day-of-week="1" :allowed-dates="allowedDates" v-model="enddate"></v-date-picker>
                         <v-time-picker locale="zh-cn" v-model="editedItem.endtime" format="24hr"></v-time-picker>
+                      </v-card-text>
+                    </v-card>
+                    <div v-if="!editedItem.ptask && editedItem.id > 0" style="height: 10px"></div>
+                    <v-card v-if="!editedItem.ptask && editedItem.id > 0">
+                      <v-card-title>
+                        <span class="headline">任务详细时间</span>
+                      </v-card-title>
+                      <v-card-text>
+                        <v-list style="margin: 20px;">
+                          <v-list-tile avatar v-for="item in editedItem.timerect" :key="item.Start">
+                            <v-list-tile-content>
+                              <v-text-field label="时间间隔(yyyy-MM-dd HH:mm:ss - yyyy-MM-dd HH:mm:ss)" v-model="item.Str"></v-text-field>
+                            </v-list-tile-content>
+                            <v-list-tile-avatar>
+                              <v-btn color="red" @click.stop="taskDelTimeRect(editedItem.timerect, item)">删除
+                                <v-icon right>block</v-icon>
+                              </v-btn>
+                            </v-list-tile-avatar>
+                          </v-list-tile>
+                        </v-list>
+                        <v-btn  color="primary" @click.stop="taskAddTimeRect(editedItem.timerect)">添加
+                          <v-icon right>add</v-icon>
+                        </v-btn>
                       </v-card-text>
                     </v-card>
                     <v-text-field
@@ -322,6 +344,21 @@ export default {
       this.actionMessage = `确定完成${item.name}?`;
     },
 
+    taskAddTimeRect(item) {
+      const s = this.formatTimestamp(new Date());
+      item.push({
+        Start: s,
+        End: s,
+        Str: `${this.formatDate(s)} - ${this.formatDate(s)}`,
+        New: true,
+      });
+    },
+
+    taskDelTimeRect(items, item) {
+      const i = items.indexOf(item);
+      items.splice(i, 1);
+    },
+
     close() {
       this.dialog = false;
       this.actionDialog = false;
@@ -468,6 +505,35 @@ export default {
             d.remark = this.editedItem.remark;
             has = true;
           }
+          const newTimeRect = [];
+          this.editedItem.timerect.forEach((v) => {
+            if (v.Str && v.Str !== '') {
+              const ns = v.Str.split(' - ');
+              if (ns.length !== 2) {
+                return;
+              }
+              const s = this.formatTimestamp(ns[0]);
+              const e = this.formatTimestamp(ns[1]);
+              if (s && e) {
+                if (s < e) {
+                  newTimeRect.push({
+                    Start: s,
+                    End: e,
+                    Str: `${this.formatDate(v.Start)} - ${this.formatDate(v.End)}`,
+                  });
+                }
+              }
+            }
+          });
+
+          if (newTimeRect.length > 0) {
+            newTimeRect.sort((a,b) => {
+              return a.Start - b.Start;
+            });
+            d.timerect = newTimeRect;
+            has = true;
+          }
+
           if (!has) {
             this.commit = false;
             this.close();
@@ -621,6 +687,9 @@ export default {
     },
     formatTimestamp(now) {
       return DateUtil.formatTimestamp(now);
+    },
+    formatDate(d) {
+      return DateUtil.formatDate(d);
     },
   },
 };

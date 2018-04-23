@@ -69,33 +69,52 @@
             </tr>
             </template>
             <template slot="expand" slot-scope="props">
+                <v-card flat style="margin: 20px;" v-if="props.item.ptask">
+                  <v-card-title>
+                    <span class="headline">子任务列表</span>
+                  </v-card-title>
+                  <task-table
+                    :editP="editP" 
+                    :openP="openP" 
+                    :doneP="doneP" 
+                    :expireP="expireP" 
+                    :delP="delP" 
+                    :pid="props.item.id"
+                    :showcolor="showcolor"
+                    :editItem="editItem"
+                    :openItem="openItem"
+                    :doneItem="doneItem"
+                    :delItem="delItem"
+                  ></task-table>
+                </v-card>
+                <v-card flat style="margin: 20px;" v-if="!props.item.ptask">
+                  <v-card-title>
+                    <span class="headline">任务详细时间</span>
+                  </v-card-title>
+                  <v-list style="margin: 20px;">
+                    <v-list-tile avatar v-for="item in props.item.timerect" :key="item.Start">
+                      <v-list-tile-content>
+                        <v-list-tile-title v-text="item.Str"></v-list-tile-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                  </v-list>
+                </v-card>
                 <v-card flat style="margin: 20px;">
-                    <task-table 
-                      v-if="props.item.ptask" 
-                      :editP="editP" 
-                      :openP="openP" 
-                      :doneP="doneP" 
-                      :expireP="expireP" 
-                      :delP="delP" 
-                      :pid="props.item.id"
-                      :showcolor="showcolor"
-                      :editItem="editItem"
-                      :openItem="openItem"
-                      :doneItem="doneItem"
-                      :delItem="delItem"
-                    ></task-table>
-                    <v-data-table
-                    :headers="headers2"
-                    :items="props.item.history"
-                    hide-actions
-                    >
-                    <template slot="items" slot-scope="props">
-                        <td class="text-xs-center">{{ formatDate(props.item.CreatedAt) }}</td>
-                        <td class="text-xs-center">{{ props.item.User.Name }}</td>
-                        <td class="text-xs-center">{{ formatAction(props.item.Action) }}</td>
-                        <td class="text-xs-center" v-html="formatActionItems(props.item.Items)"></td>
-                    </template>
-                    </v-data-table>
+                  <v-card-title>
+                    <span class="headline">任务变更记录</span>
+                  </v-card-title>
+                  <v-data-table
+                  :headers="headers2"
+                  :items="props.item.history"
+                  hide-actions
+                  >
+                  <template slot="items" slot-scope="props">
+                      <td class="text-xs-center">{{ formatDate(props.item.CreatedAt) }}</td>
+                      <td class="text-xs-center">{{ props.item.User.Name }}</td>
+                      <td class="text-xs-center">{{ formatAction(props.item.Action) }}</td>
+                      <td class="text-xs-center" v-html="formatActionItems(props.item.Items)"></td>
+                  </template>
+                  </v-data-table>
                 </v-card>
             </template>
             <v-alert slot="no-data" :value="true" color="error" icon="warning">
@@ -278,7 +297,6 @@ export default {
     },
     pagination: {
       handler() {
-        console.dir(this.pagination);
         this.updateData();
       },
       deep: true,
@@ -331,6 +349,17 @@ export default {
             switch (resp.data.code) {
               case 0: {
                 resp.data.data.data.forEach((element) => {
+                  const ttimerect = [];
+                  if (element.TimeRect) {
+                    element.TimeRect.forEach((v) => {
+                      ttimerect.push({
+                        Start: v.Start,
+                        End: v.End,
+                        Str: `${this.formatDate(v.Start)} - ${this.formatDate(v.End)}`,
+                      });
+                    });
+                  }
+
                   items.push({
                     id: element.ID,
                     name: element.Name,
@@ -351,6 +380,7 @@ export default {
                     realend: element.RealEnd,
                     realends: this.formatDate(element.RealEnd),
                     time: this.formatTimeSince(element.Start, element.RealEnd),
+                    timerect: ttimerect,
                     status: element.Status,
                     statuss: this.formatStatus(element),
                     history: element.TaskHistory,

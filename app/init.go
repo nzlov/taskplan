@@ -6,10 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var PM = struct {
-	start string
-	end   string
-}{}
+var (
+	PM = struct {
+		start string
+		end   string
+	}{}
+)
 
 func Init(r *gin.Engine) {
 
