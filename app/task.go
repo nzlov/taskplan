@@ -377,7 +377,7 @@ func TaskUpdate(c *gin.Context) {
 		}
 		if obj.TimeRect != nil {
 			items = append(items, HistoryItem{
-				Field: "结束时间",
+				Field: "任务时间段",
 				Old:   task.TimeRect,
 				New:   *obj.TimeRect,
 			})

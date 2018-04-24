@@ -619,9 +619,6 @@ export default {
       if (!id && !this.ptasksearch) {
         return;
       }
-      if (!id) {
-        return;
-      }
       if (id) {
         if (this.taskids.indexOf(id) > -1) {
           return;

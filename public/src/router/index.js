@@ -8,6 +8,7 @@ import User from '@/components/User';
 import UserGroup from '@/components/UserGroup';
 import Permission from '@/components/Permission';
 import Task from '@/components/Task';
+import TaskGantt from '@/components/TaskGantt';
 import Holiday from '@/components/Holiday';
 import Leave from '@/components/Leave';
 
@@ -39,6 +40,14 @@ const router = new Router({
       path: '/task',
       name: 'Task',
       component: Task,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/task_gantt',
+      name: 'TaskGantt',
+      component: TaskGantt,
       meta: {
         requiresAuth: true,
       },

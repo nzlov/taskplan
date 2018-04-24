@@ -6,6 +6,7 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 
 import TaskTable from '@/components/TaskTable';
+import Gantt from '@/components/Gantt';
 
 import App from './App';
 import store from './store';
@@ -16,6 +17,7 @@ import HttpUtil from './utils/http';
 Vue.use(Vuetify);
 
 Vue.component('task-table', TaskTable);
+Vue.component('gantt', Gantt);
 
 Vue.config.productionTip = false;
 Vue.prototype.$http = HttpUtil;

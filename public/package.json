@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "dhtmlx-gantt": "^5.1.0",
     "js-md5": "^0.7.3",
     "npm": "^5.8.0",
     "vue": "^2.5.2",

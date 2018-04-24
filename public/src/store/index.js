@@ -30,6 +30,11 @@ const store = new Vuex.Store({
         title: '任务',
       },
       {
+        icon: 'bubble_chart',
+        path: '/task_gantt',
+        title: '任务甘特图',
+      },
+      {
         icon: 'person',
         path: '/user',
         title: '用户',
