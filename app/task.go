@@ -440,15 +440,13 @@ func updatesTask(tx *Tx, child Task, id uint, del bool) {
 		fmt.Println("updatesTask has Error:", err)
 		return
 	}
-	tasks = append(tasks, child)
+	if !del {
+		tasks = append(tasks, child)
+	}
 	fmt.Println("updatesTask", "childs count:", len(tasks))
 
 	ptask := false
 	for _, v := range tasks {
-		if del && v.ID == task.ID {
-			fmt.Println("updatesTask", "抛弃当前")
-			continue
-		}
 		ptask = true
 		if v.End > end {
 			fmt.Println("updatesTask", v.End, end, "替换 end")

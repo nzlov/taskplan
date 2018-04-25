@@ -15,11 +15,19 @@ var (
 
 func Init(r *gin.Engine) {
 
-	err := InitDB("postgres://:@localhost/taskplan?sslmode=disable")
+	u := "postgres://:@localhost/taskplan?sslmode=disable"
+	switch gin.Mode() {
+	case "release":
+		u = "postgres://taskplan:shengyun123@localhost/taskplan?sslmode=disable"
+	}
+
+	err := InitDB(u)
 	if err != nil {
 		panic(err)
 	}
-	//DB.LogMode(true)
+	if gin.Mode() != "release" {
+		DB.LogMode(true)
+	}
 
 	genPM()
 

@@ -644,8 +644,8 @@ export default {
           switch (resp.data.code) {
             case 0: {
               resp.data.data.data.forEach((element) => {
-                if (this.tasknames.indexOf(element.name) === -1) {
-                  this.tasknames.push(element.name);
+                if (this.tasknames.indexOf(element.Name) === -1) {
+                  this.tasknames.push(element.Name);
                   this.taskids.push(element.ID);
                   this.tasks.push({
                     id: element.ID,
