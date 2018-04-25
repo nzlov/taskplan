@@ -5,17 +5,19 @@ function genSign(user, token, url) {
   return md5(`${user}/api${url}${token}`);
 }
 
+const publicurl = 'http://192.168.1.200:9005';
+
 class HttpUtil {
   static Get(url) {
-    return axios.get(`http://192.168.1.200:9005/api${url}`);
+    return axios.get(`${publicurl}/api${url}`);
   }
   static Post(url, data) {
-    return axios.post(`http://192.168.1.200:9005/api${url}`, data);
+    return axios.post(`${publicurl}/api${url}`, data);
   }
   static LGet(store, url) {
     return axios({
       method: 'get',
-      url: `http://192.168.1.200:9005/api${url}`,
+      url: `${publicurl}/api${url}`,
       headers: {
         'X-AppUser': store.user,
         'X-AppSign': genSign(store.user, store.token, url),
@@ -26,7 +28,7 @@ class HttpUtil {
     console.dir(data);
     return axios({
       method: 'post',
-      url: `http://192.168.1.200:9005/api${url}`,
+      url: `${publicurl}/api${url}`,
       headers: {
         'X-AppUser': store.user,
         'X-AppSign': genSign(store.user, store.token, url),
@@ -37,7 +39,7 @@ class HttpUtil {
   static LDel(store, url) {
     return axios({
       method: 'delete',
-      url: `http://192.168.1.200:9005/api${url}`,
+      url: `${publicurl}/api${url}`,
       headers: {
         'X-AppUser': store.user,
         'X-AppSign': genSign(store.user, store.token, url),

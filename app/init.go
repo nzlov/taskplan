@@ -16,8 +16,7 @@ var (
 func Init(r *gin.Engine) {
 
 	u := "postgres://:@localhost/taskplan?sslmode=disable"
-	switch gin.Mode() {
-	case "release":
+	if gin.Mode() == "release" {
 		u = "postgres://taskplan:shengyun123@localhost/taskplan?sslmode=disable"
 	}
 
