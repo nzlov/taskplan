@@ -100,7 +100,7 @@ export default {
       gantt.render();
     },
     exportdata() {
-      antt.exportToPNG({
+      gantt.exportToPNG({
         header: '<link rel="stylesheet" href="//dhtmlx.com/docs/products/dhtmlxGantt/common/customstyles.css" type="text/css">',
       });
     },
