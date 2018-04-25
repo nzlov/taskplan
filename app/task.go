@@ -545,7 +545,6 @@ func TaskList(c *gin.Context) {
 	}
 	offsets := c.Query("offset")
 	limits := c.Query("limit")
-	pid := strings.TrimSpace(c.Query("pid"))
 
 	offset := int64(-1)
 	if strings.TrimSpace(offsets) != "" {
@@ -556,20 +555,19 @@ func TaskList(c *gin.Context) {
 		limit, _ = strconv.ParseInt(limits, 10, 64)
 	}
 
+	pid := strings.TrimSpace(c.Query("pid"))
 	if pid != "" {
 		query["parent_task_id = ? "] = pid
-	} else {
-		query["parent_task_id = ? "] = 0
 	}
 
 	session, _ := c.Get("Session")
 	list := c.DefaultQuery("list", "")
 	switch list {
-	case "group":
-		query["user_group_id = ?"] = session.(*AuthSession).User.UserGroupID
+	case "":
 	case "self":
 		query["user_id = ?"] = session.(*AuthSession).User.ID
-
+	default:
+		query["user_group_id = ?"] = list
 	}
 
 	total, err := DBFind(tx.DB, new(Task), &objs, query, or, c.Query("order")+",-created_at", offset, limit, true)
@@ -582,6 +580,7 @@ func TaskList(c *gin.Context) {
 		})
 	}
 }
+
 func TaskDel(c *gin.Context) {
 	tx := NewTx(c)
 	ids := c.Param("id")

@@ -11,6 +11,7 @@ const store = new Vuex.Store({
     id: 0,
     token: '',
     user: '',
+    usergroup: 0,
     realname: '',
     permissions: {},
     menu: [],
@@ -80,6 +81,7 @@ const store = new Vuex.Store({
                 state.id = data.id;
                 state.user = data.user;
                 state.token = data.token;
+                state.usergroup = data.usergroup;
                 state.realname = data.realname;
                 state.permissions = data.permissions;
                 state.menu = data.menu;
@@ -99,6 +101,7 @@ const store = new Vuex.Store({
       console.dir('login');
       state.id = data.User.ID;
       state.user = data.User.Name;
+      state.usergroup = data.User.UserGroupID;
       state.token = data.token;
       state.realname = data.User.RealName;
       state.permissions = data.permission;
@@ -110,6 +113,7 @@ const store = new Vuex.Store({
       console.dir('logout');
       state.login = false;
       state.id = 0;
+      state.usergroup = 0;
       state.user = '';
       state.realname = '';
       state.token = '';
@@ -121,7 +125,7 @@ const store = new Vuex.Store({
       new Promise((resolve) => {
         const objs = [{
           name: '无',
-          id: '0',
+          id: 0,
         }];
         HttpUtil.LGet(state, '/user').then((resp) => {
           switch (resp.data.code) {
@@ -154,7 +158,7 @@ const store = new Vuex.Store({
       new Promise((resolve) => {
         const objs = [{
           name: '无',
-          id: '0',
+          id: 0,
         }];
         HttpUtil.LGet(state, '/usergroup').then((resp) => {
           switch (resp.data.code) {
@@ -187,7 +191,7 @@ const store = new Vuex.Store({
       new Promise((resolve) => {
         const objs = [{
           name: '无',
-          id: '0',
+          id: 0,
         }];
         HttpUtil.LGet(state, '/role').then((resp) => {
           switch (resp.data.code) {

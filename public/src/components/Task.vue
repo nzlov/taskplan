@@ -169,6 +169,7 @@
           <v-switch :label="'颜色'" v-model="showcolor"></v-switch>
         </v-card-title>
         <task-table 
+          :pid="0"
           :editP="editP" 
           :openP="openP" 
           :doneP="doneP" 

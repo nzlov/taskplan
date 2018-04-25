@@ -41,25 +41,25 @@
                 <td class="text-xs-center"> {{ props.item.statuss }}</td>
                 <td class="text-xs-center">{{ props.item.time }}</td>
                 <td class="justify-center layout px-0">
-                <v-tooltip bottom v-if="editP && props.item.start > formatTimestamp(new Date()) || editP && props.item.start > 0 && props.item.start  <= formatTimestamp(new Date()) && expireP">
+                <v-tooltip bottom v-if="props.item.edit && ( editP && props.item.start > formatTimestamp(new Date()) || editP && props.item.start > 0 && props.item.start  <= formatTimestamp(new Date()) && expireP )">
                     <v-btn icon slot="activator" class="mx-0" @click.stop="editItem(items,props.item)">
                     <v-icon color="teal">edit</v-icon>
                     </v-btn>
                     <span>编辑</span>
                 </v-tooltip>
-                <v-tooltip bottom v-if="!props.item.ptask && openP && props.item.status == 2">
+                <v-tooltip bottom v-if="props.item.edit && ( !props.item.ptask && openP && props.item.status == 2 )">
                     <v-btn icon slot="activator" class="mx-0" @click.stop="openItem(props.item)">
                     <v-icon color="orange">restore</v-icon>
                     </v-btn>
                     <span>再次打开</span>
                 </v-tooltip>
-                <v-tooltip bottom v-if="!props.item.ptask && doneP && props.item.status != 2">
+                <v-tooltip bottom v-if="props.item.edit && ( !props.item.ptask && doneP && props.item.status != 2 )">
                     <v-btn icon slot="activator" class="mx-0" @click.stop="doneItem(props.item)">
                     <v-icon color="primary">check_circle</v-icon>
                     </v-btn>
                     <span>完成</span>
                 </v-tooltip>
-                <v-tooltip bottom v-if="delP">
+                <v-tooltip bottom v-if="props.item.edit && delP">
                     <v-btn icon slot="activator" class="mx-0" @click.stop="delItem(props.item)">
                     <v-icon color="pink">delete</v-icon>
                     </v-btn>
@@ -145,7 +145,7 @@ export default {
       defalut: false,
     },
     pid: {
-      defalut: '',
+      defalut: '0',
     },
     showcolor: {
       defalut: false,
@@ -273,10 +273,6 @@ export default {
           value: 'self',
         },
         {
-          name: '组',
-          value: 'group',
-        },
-        {
           name: '全部',
           value: '',
         },
@@ -289,6 +285,18 @@ export default {
     formTitle() {
       return this.editedIndex === -1 ? '新增' : `编辑-${this.editedItem.name}`;
     },
+  },
+
+  created() {
+    this.$store.state.usergroups.forEach(element => {
+      if (element.name === '无') {
+        return;
+      }
+      this.listtypes.push({
+        name: element.name,
+        value: element.id,
+      })
+    });
   },
 
   watch: {
@@ -338,12 +346,8 @@ export default {
         if (this.search) {
           search = `&filter=${this.search}`;
         }
-        let pid = '';
-        if (this.pid) {
-          pid = this.pid;
-        }
         this.$http
-          .LGet(this.$store.state, `/task?all=t&pid=${pid}&list=${this.listtype}&${order}&offset=${offset}&limit=${rowsPerPage}${search}`)
+          .LGet(this.$store.state, `/task?all=t&pid=${this.pid}&list=${this.listtype}&${order}&offset=${offset}&limit=${rowsPerPage}${search}`)
           .then((resp) => {
             this.loading = false;
             switch (resp.data.code) {
@@ -384,6 +388,7 @@ export default {
                     status: element.Status,
                     statuss: this.formatStatus(element),
                     history: element.TaskHistory,
+                    edit: this.$store.state.usergroup === element.UserGroup.ID,
                   });
                 });
                 total = resp.data.data.total;

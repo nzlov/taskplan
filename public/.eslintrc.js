@@ -49,6 +49,7 @@ module.exports = {
     'no-console': 'off',
     'no-alert': 'off',
     'no-eval': 'off',
+    'no-undef': 'off',
     'no-lonely-if': 'off',
     "no-restricted-syntax": 0,
     'no-unused-expressions': ['error',{
