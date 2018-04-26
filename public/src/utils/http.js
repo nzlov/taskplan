@@ -5,7 +5,7 @@ function genSign(user, token, url) {
   return md5(`${user}/api${url}${token}`);
 }
 
-const publicurl = 'http://192.168.1.200:9005';
+const publicurl = '';
 
 class HttpUtil {
   static Get(url) {
