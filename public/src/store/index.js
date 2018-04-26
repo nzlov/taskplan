@@ -14,6 +14,7 @@ const store = new Vuex.Store({
     usergroup: 0,
     realname: '',
     permissions: {},
+    editall: false, // 允许编辑所有的任务
     menu: [],
     users: [],
     roles: [],
@@ -85,6 +86,7 @@ const store = new Vuex.Store({
                 state.realname = data.realname;
                 state.permissions = data.permissions;
                 state.menu = data.menu;
+                state.editall = data.permissions['list.all'] !== undefined;
                 state.login = true;
                 break;
               }
@@ -105,6 +107,7 @@ const store = new Vuex.Store({
       state.token = data.token;
       state.realname = data.User.RealName;
       state.permissions = data.permission;
+      state.editall = (data.permission['list.all'] !== undefined);
       state.menu = data.menu;
       state.login = true;
       sessionStorage.session = JSON.stringify(state);

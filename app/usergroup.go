@@ -105,12 +105,6 @@ func UserGroupList(c *gin.Context) {
 		query["name like ?"] = "%" + filter + "%"
 	}
 
-	cs, _ := c.Get("Session")
-	session := cs.(*AuthSession)
-	if _, ok := session.Permission["list.all"]; !ok {
-		query["id = ?"] = session.User.UserGroupID
-	}
-
 	objs := []UserGroup{}
 	total, err := DBFind(tx.DB, new(UserGroup), &objs, query, nil, c.Query("order"), offset, limit, true)
 	if err != nil {

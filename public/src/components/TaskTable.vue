@@ -388,7 +388,7 @@ export default {
                     status: element.Status,
                     statuss: this.formatStatus(element),
                     history: element.TaskHistory,
-                    edit: this.$store.state.usergroup === element.UserGroup.ID,
+                    edit: this.$store.state.editall || this.$store.state.usergroup === element.UserGroup.ID,
                   });
                 });
                 total = resp.data.data.total;
