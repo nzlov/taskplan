@@ -41,7 +41,7 @@
                 <td class="text-xs-center"> {{ props.item.statuss }}</td>
                 <td class="text-xs-center">{{ props.item.time }}</td>
                 <td class="justify-center layout px-0">
-                <v-tooltip bottom v-if="props.item.edit && ( editP && props.item.start > formatTimestamp(new Date()) || editP && props.item.start > 0 && props.item.start  <= formatTimestamp(new Date()) && expireP )">
+                <v-tooltip bottom v-if="props.item.edit && editP && ( props.item.start > formatTimestamp(new Date()) || props.item.start  <= formatTimestamp(new Date()) && expireP )">
                     <v-btn icon slot="activator" class="mx-0" @click.stop="editItem(items,props.item)">
                     <v-icon color="teal">edit</v-icon>
                     </v-btn>

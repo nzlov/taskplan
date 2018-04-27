@@ -66,34 +66,41 @@ func UserUpdate(c *gin.Context) {
 	tx := NewTx(c)
 
 	ids := c.Param("id")
-	var form User
+	var user User
 	id, err := strconv.ParseInt(ids, 10, 64)
 	if err != nil {
 		tx.Error(http.StatusBadRequest, CodeParamsError, err.Error())
 		return
 	}
-	err = tx.DB.First(&form, id).Error
+	err = tx.DB.First(&user, id).Error
 	if err != nil {
 		tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 		return
 	}
 
+	var form = struct {
+		RealName *string `form:"realname" binding:"required"`
+		Password *string ` form:"password"`
+
+		UserGroupID *uint `form:"usergroupid"`
+		RoleID      *uint `form:"roleid"`
+	}{}
+
 	if err = c.Bind(&form); err == nil {
-		exit := User{}
-		err = tx.DB.Where("id <> ? and name = ?", ids, form.Name).First(&exit).Error
-		if err != nil {
-			if err != gorm.ErrRecordNotFound {
-				tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
-				return
-			}
-		} else {
-			tx.Error(http.StatusOK, CodeKeyMany, nil)
-			return
+		if form.RoleID != nil {
+			user.Role.ID = *form.RoleID
 		}
-		form.Role.ID = form.RoleID
-		form.UserGroup.ID = form.UserGroupID
+		if form.UserGroupID != nil {
+			user.UserGroup.ID = *form.UserGroupID
+		}
+		if form.RealName != nil {
+			user.RealName = *form.RealName
+		}
+		if form.Password != nil {
+			user.Password = MakeMd5(*form.Password)
+		}
 		// TODO 修改密码判断权限
-		err = tx.DB.Save(&form).Error
+		err = tx.DB.Save(&user).Error
 		if err != nil {
 			tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 		} else {

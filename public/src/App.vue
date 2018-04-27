@@ -185,17 +185,20 @@ export default {
         const d = {
           realname: this.realname,
         };
-        if (!this.password) {
+        if (this.password) {
           d.password = this.password;
         }
-        this.$http.Post(`/user/${this.$store.state.id}`, d).then((resp) => {
+        this.$http.LPost(this.$store.state, `/user/${this.$store.state.id}`, d).then((resp) => {
           switch (resp.data.code) {
             case 0: {
-              setTimeout(() => {
-                this.login = false;
-                this.alert_success = true;
-                this.$router.back();
-              }, 2000);
+              this.alert_success = true;
+              if (this.password) {
+                setTimeout(() => {
+                  this.$store.commit('logout');
+                  this.dialog = false;
+                  this.$route.replace('/');
+                }, 2000);
+              }
               break;
             }
             case 300: {
