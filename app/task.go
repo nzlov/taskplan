@@ -87,6 +87,7 @@ type Task struct {
 	UserID       uint
 	ParentTaskID uint
 	PTask        bool   `description:"是否为父级任务"`
+	PUserGroup   bool   `description:"父任务与此任务是否同组"`
 	Description  string `description:"任务描述"`
 
 	CreateUserID uint `gorm:"createuserid" description:"创建人ID"`
@@ -119,8 +120,17 @@ func TaskAdd(c *gin.Context) {
 	}{}
 
 	if err := c.Bind(&obj); err == nil {
+		usergroup := UserGroup{}
+		if obj.UserGroupID > 0 {
+			if err = tx.DB.First(&usergroup, obj.UserGroupID).Error; err != nil {
+				tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
+				return
+			}
+		}
+
 		exit := Task{}
-		err = DB.Where("name = ?", obj.Name).First(&exit).Error
+		session, _ := c.Get("Session")
+		err = DB.Where("name = ?", usergroup.Name+"-"+obj.Name).First(&exit).Error
 		if err != nil {
 			if err != gorm.ErrRecordNotFound {
 				tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
@@ -134,9 +144,8 @@ func TaskAdd(c *gin.Context) {
 			tx.Error(http.StatusBadRequest, CodeParamsError, "start > end")
 			return
 		}
-		session, _ := c.Get("Session")
 		task := Task{
-			Name:         obj.Name,
+			Name:         usergroup.Name + "-" + obj.Name,
 			UserGroupID:  obj.UserGroupID,
 			UserID:       obj.UserID,
 			CreateUserID: session.(*AuthSession).User.ID,
@@ -162,6 +171,7 @@ func TaskAdd(c *gin.Context) {
 				return
 			}
 			need = true
+			task.PUserGroup = task.UserGroupID == parent.UserGroupID
 			task.ParentTaskID = parent.ID
 			task.TaskHistory[0].Items = append(task.TaskHistory[0].Items, HistoryItem{
 				Field: "父级任务",
@@ -208,18 +218,6 @@ func TaskUpdate(c *gin.Context) {
 		return
 	}
 
-	// 父级任务不允许编辑
-	childs := 0
-	err = tx.DB.Model(new(Task)).Where("parent_task_id = ?", id).Count(&childs).Error
-	if err != nil {
-		tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
-		return
-	}
-	if childs > 0 {
-		tx.Error(http.StatusBadRequest, CodeParamsError, "parent task don't edit")
-		return
-	}
-
 	obj := struct {
 		Name        *string        `form:"name"`
 		UserGroupID *uint          `form:"usergroupid"`
@@ -237,6 +235,7 @@ func TaskUpdate(c *gin.Context) {
 		exit := Task{}
 
 		has := false
+		needupdateChildPUserGroup := false
 		need := false
 		needTime := false
 		items := HistoryItems{}
@@ -292,6 +291,7 @@ func TaskUpdate(c *gin.Context) {
 					New:   usergroup.Name,
 				})
 			}
+			needupdateChildPUserGroup = task.PTask
 			task.UserGroupID = *obj.UserGroupID
 			task.UserGroup.ID = *obj.UserGroupID
 			has = true
@@ -327,6 +327,7 @@ func TaskUpdate(c *gin.Context) {
 					Old:   task.Name,
 					New:   "",
 				})
+				task.PUserGroup = false
 			} else {
 				parent := Task{}
 				err = tx.DB.First(&parent, *obj.TaskID).Error
@@ -339,6 +340,7 @@ func TaskUpdate(c *gin.Context) {
 					Old:   task.Name,
 					New:   parent.Name,
 				})
+				task.PUserGroup = task.UserGroupID == parent.UserGroupID
 			}
 			task.ParentTaskID = *obj.TaskID
 			has = true
@@ -353,7 +355,7 @@ func TaskUpdate(c *gin.Context) {
 			task.Description = *obj.Description
 			has = true
 		}
-		if obj.Start != nil && *obj.Start != task.Start {
+		if !task.PTask && obj.Start != nil && *obj.Start != task.Start {
 			items = append(items, HistoryItem{
 				Field: "开始时间",
 				Old:   formatTime(task.Start),
@@ -364,7 +366,7 @@ func TaskUpdate(c *gin.Context) {
 			need = true
 			needTime = true
 		}
-		if obj.End != nil && *obj.End != task.End {
+		if !task.PTask && obj.End != nil && *obj.End != task.End {
 			items = append(items, HistoryItem{
 				Field: "结束时间",
 				Old:   formatTime(task.End),
@@ -375,7 +377,7 @@ func TaskUpdate(c *gin.Context) {
 			need = true
 			needTime = true
 		}
-		if obj.TimeRect != nil {
+		if !task.PTask && obj.TimeRect != nil {
 			items = append(items, HistoryItem{
 				Field: "任务时间段",
 				Old:   task.TimeRect,
@@ -408,6 +410,11 @@ func TaskUpdate(c *gin.Context) {
 					}
 					fmt.Println("更新父级")
 					updatesTask(tx, task, task.ParentTaskID, false)
+				}
+				if needupdateChildPUserGroup {
+					tx.DB.Model(new(Task)).Where("parent_task_id = ?", task.ID).Updates(map[string]interface{}{
+						"p_user_group": gorm.Expr("user_group_id == ?", task.UserGroup.ID),
+					})
 				}
 			}
 		}
@@ -554,8 +561,17 @@ func TaskList(c *gin.Context) {
 	}
 
 	pid := strings.TrimSpace(c.Query("pid"))
-	if pid != "" {
-		query["parent_task_id = ? "] = pid
+	if pid != "" && len(or) == 0 {
+		if pid == "0" {
+			or = append(or, map[string]interface{}{
+				"parent_task_id = ?": pid,
+			})
+			or = append(or, map[string]interface{}{
+				"p_user_group = ?": false,
+			})
+		} else {
+			query["parent_task_id = ? "] = pid
+		}
 	}
 
 	session, _ := c.Get("Session")

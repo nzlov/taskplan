@@ -99,8 +99,9 @@ func LoginEndpoint(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, RespData(CodeDBError, err.Error()))
 				return
 			}
-			if user.Status == 1{
-				
+			if user.Status == 1 {
+				c.JSON(http.StatusOK, RespData(CodeLoginFailed, "账号禁用"))
+				return
 			}
 			session := AuthSession{
 				Token:      RandomString(32),

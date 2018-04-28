@@ -24,7 +24,7 @@ func LeaveAdd(c *gin.Context) {
 	var obj Leave
 	if err := c.Bind(&obj); err == nil {
 		exit := Leave{}
-		err = DB.LogMode(true).Where("\"start\" between ? and ?", obj.Start, obj.End).Or("\"end\" between ? and ?", obj.Start, obj.End).First(&exit).Error
+		err = DB.LogMode(true).Where("user_id = ? and \"start\" between ? and ?", obj.UserID, obj.Start, obj.End).Or("user_id = ? and \"end\" between ? and ?", obj.UserID, obj.Start, obj.End).First(&exit).Error
 		if err != nil {
 			if err != gorm.ErrRecordNotFound {
 				tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())

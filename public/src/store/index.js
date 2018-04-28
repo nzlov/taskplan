@@ -147,7 +147,8 @@ const store = new Vuex.Store({
           resolve({
             objs,
           });
-        }).catch(() => {
+        }).catch((e) => {
+          console.dir(e);
           console.dir('服务器报错');
           resolve({
             objs,

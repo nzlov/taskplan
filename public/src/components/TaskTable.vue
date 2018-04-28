@@ -30,7 +30,7 @@
         >
             <template slot="items" slot-scope="props">
             <tr @click="props.expanded = !props.expanded" :style="genbackground(props.item)">
-                <td>{{ props.item.name }}</td>
+                <td><v-icon v-if="props.item.ptask">view_list</v-icon>{{ props.item.name }}</td>
                 <td class="text-xs-center">{{ props.item.usergroup }}</td>
                 <td class="text-xs-center">{{ props.item.user }}</td>
                 <td class="text-xs-center">{{ props.item.createuser }}</td>
@@ -101,6 +101,12 @@
                 </v-card>
                 <v-card flat style="margin: 20px;">
                   <v-card-title>
+                    <span class="headline">任务简介</span>
+                  </v-card-title>
+                  <span>{{ props.item.description }}</span>
+                </v-card>
+                <v-card flat style="margin: 20px;">
+                  <v-card-title>
                     <span class="headline">任务变更记录</span>
                   </v-card-title>
                   <v-data-table
@@ -148,6 +154,9 @@ export default {
       defalut: '0',
     },
     showcolor: {
+      defalut: false,
+    },
+    onlyself: {
       defalut: false,
     },
     editItem: Function,
@@ -346,8 +355,14 @@ export default {
         if (this.search) {
           search = `&filter=${this.search}`;
         }
+        let pid = `&pid=${this.pid}`
+        if (this.onlyself) {
+          pid = '';
+        }
+
+
         this.$http
-          .LGet(this.$store.state, `/task?all=t&pid=${this.pid}&list=${this.listtype}&${order}&offset=${offset}&limit=${rowsPerPage}${search}`)
+          .LGet(this.$store.state, `/task?all=t${pid}&list=${this.listtype}&${order}&offset=${offset}&limit=${rowsPerPage}${search}`)
           .then((resp) => {
             this.loading = false;
             switch (resp.data.code) {
