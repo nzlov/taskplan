@@ -108,6 +108,7 @@ type Task struct {
 	User       User      `gorm:"save_associations:false"`
 	CreateUser User      `gorm:"save_associations:false"`
 	UserGroup  UserGroup `gorm:"save_associations:false"`
+	Tasks      []*Task   `gorm:"-"`
 }
 
 func TaskAdd(c *gin.Context) {
@@ -549,6 +550,7 @@ func TaskList(c *gin.Context) {
 		TimeRectEnd   string `json:"timerectend"`
 		Search        string `json:"search"`
 		Status        []int  `json:"status"`
+		Tasks         []int  `json:"tasks"`
 		Users         []int  `json:"users"`
 		UserGroups    []int  `json:"usergroups"`
 	}{}
@@ -612,6 +614,10 @@ func TaskList(c *gin.Context) {
 			ors = append(ors, or)
 		}
 
+		if len(filters.Tasks) > 0 {
+			query["id in (?)"] = filters.Tasks
+		}
+
 		for _, v := range filters.Status {
 			switch v {
 			case 1:
@@ -631,11 +637,39 @@ func TaskList(c *gin.Context) {
 	if err != nil {
 		tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 	} else {
+		for i, t := range objs {
+			if t.PTask {
+				childs, err := taskGetChild(tx.DB, t.ID)
+				if err != nil {
+					tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
+				}
+				objs[i].Tasks = childs
+			}
+		}
+
 		tx.Ok(CodeOK, map[string]interface{}{
 			"total": total,
 			"data":  objs,
 		})
 	}
+}
+
+func taskGetChild(db *gorm.DB, id ...uint) ([]*Task, error) {
+	tasks := []*Task{}
+	_, err := DBFind(db, new(Task), &tasks, map[string]interface{}{
+		"parent_task_id in (?)": id,
+	}, nil, "", -1, -1, false)
+	if err != nil {
+		return tasks, err
+	}
+	for _, t := range tasks {
+		c, err := taskGetChild(db, t.ID)
+		if err != nil {
+			return tasks, err
+		}
+		t.Tasks = c
+	}
+	return tasks, nil
 }
 
 func TaskListO(c *gin.Context) {

@@ -1,5 +1,5 @@
 <template>
-  <v-container v-resize="onResize">
+  <v-container>
     <remote-js src="//export.dhtmlx.com/gantt/api.js"></remote-js>
     <div style="height:90%;" ref="gantt"></div>
   </v-container>
@@ -9,6 +9,7 @@
 import 'dhtmlx-gantt';
 import 'dhtmlx-gantt/codebase/locale/locale_cn';
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
+import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_tooltip';
 
 export default {
   components: {
@@ -43,6 +44,16 @@ export default {
     gantt.templates.task_class = ((startdate, enddate, item) => {
       return this.getColorStyle(item);
     });
+    gantt.templates.tooltip_text = function(start,end,task){
+      return `<b>任务:</b>${task.text}<br/>
+              <b>组:</b>${task.usergroup}<br/>
+              <b>资源:</b>${task.user}<br/>
+              <b>开始时间:</b>${task.start}<br/>
+              <b>结束时间:</b>${task.end}<br/>
+              <b>真正结束时间:</b>${task.realend}<br/>
+              <b>状态:</b>${task.statuss}<br/>
+              `
+    };
     gantt.config.columns = [
       {
         name: 'text',

@@ -55,29 +55,7 @@ export default {
                 if (element.Start === 0 || element.End === 0) {
                   return;
                 }
-                items.push({
-                  id: element.ID,
-                  text: element.Name,
-                  parent: element.ParentTaskID,
-                  user: element.User.RealName,
-                  start_date: this.formatDate(element.Start),
-                  duration: this.getDuration(element),
-                  open: true,
-
-                  description: element.Description,
-                  usergroup: element.UserGroup.Name,
-                  usergroupid: element.UserGroup.ID,
-                  userid: element.User.ID,
-                  ptask: element.PTask,
-                  createuser: element.CreateUser.RealName,
-                  createuserid: element.CreateUser.ID,
-                  start: element.Start,
-                  end: element.End,
-                  realend: element.RealEnd,
-                  status: element.Status,
-                  statuss: this.formatStatus(element),
-                  history: element.TaskHistory,
-                });
+                items.push(this.taskToGantt(items, element));
               });
               break;
             }
@@ -103,6 +81,43 @@ export default {
           link: [],
         });
       });
+    },
+    taskchild(items, tasks) {
+      tasks.forEach((element) => {
+        if (element.Start === 0 || element.End === 0) {
+          return;
+        }
+        items.push(this.taskToGantt(items, element));
+      });
+    },
+    taskToGantt(items, element) {
+      let task = {
+        id: element.ID,
+        text: element.Name,
+        parent: element.ParentTaskID,
+        user: element.User.RealName,
+        start_date: this.formatDate(element.Start),
+        duration: this.getDuration(element),
+        open: true,
+
+        description: element.Description,
+        usergroup: element.UserGroup.Name,
+        usergroupid: element.UserGroup.ID,
+        userid: element.User.ID,
+        ptask: element.PTask,
+        createuser: element.CreateUser.RealName,
+        createuserid: element.CreateUser.ID,
+        start: element.Start,
+        end: element.End,
+        realend: element.RealEnd,
+        status: element.Status,
+        statuss: this.formatStatus(element),
+        history: element.TaskHistory,
+      };
+      if (task.ptask) {
+        this.taskchild(items, element.Tasks);
+      }
+      return task;
     },
     getDuration(v) {
       // 获取任务间隔
