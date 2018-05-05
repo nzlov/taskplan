@@ -296,15 +296,15 @@ export default {
     },
   },
 
-  created() {
-    this.$store.state.usergroups.forEach(element => {
+  mounted() {
+    this.$store.state.usergroups.forEach((element) => {
       if (element.name === '无') {
         return;
       }
       this.listtypes.push({
         name: element.name,
         value: element.id,
-      })
+      });
     });
   },
 
@@ -355,7 +355,7 @@ export default {
         if (this.search) {
           search = `&filter=${this.search}`;
         }
-        let pid = `&pid=${this.pid}`
+        let pid = `&pid=${this.pid}`;
         if (this.onlyself) {
           pid = '';
         }
@@ -403,7 +403,8 @@ export default {
                     status: element.Status,
                     statuss: this.formatStatus(element),
                     history: element.TaskHistory,
-                    edit: this.$store.state.editall || this.$store.state.usergroup === element.UserGroup.ID,
+                    edit: this.$store.state.editall ||
+                      this.$store.state.usergroup === element.UserGroup.ID,
                   });
                 });
                 total = resp.data.data.total;

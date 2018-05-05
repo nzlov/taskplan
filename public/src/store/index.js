@@ -9,6 +9,7 @@ const store = new Vuex.Store({
   state: {
     login: false,
     id: 0,
+    ok: 0,
     token: '',
     user: '',
     usergroup: 0,
@@ -101,6 +102,7 @@ const store = new Vuex.Store({
     },
     login(state, data) {
       console.dir('login');
+      state.ok = 0;
       state.id = data.User.ID;
       state.user = data.User.Name;
       state.usergroup = data.User.UserGroupID;
@@ -156,6 +158,7 @@ const store = new Vuex.Store({
         });
       }).then((data) => {
         state.users = data.objs;
+        state.ok += 1;
       });
     },
     reloadusergroups(state) {
@@ -189,6 +192,7 @@ const store = new Vuex.Store({
         });
       }).then((data) => {
         state.usergroups = data.objs;
+        state.ok += 1;
       });
     },
     reloadroles(state) {
@@ -222,6 +226,7 @@ const store = new Vuex.Store({
         });
       }).then((data) => {
         state.roles = data.objs;
+        state.ok += 1;
       });
     },
     reloadholidays(state) {
@@ -265,6 +270,7 @@ const store = new Vuex.Store({
         });
       }).then((data) => {
         state.holidays = data.objs;
+        state.ok += 1;
       });
     },
   },

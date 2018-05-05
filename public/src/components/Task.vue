@@ -255,7 +255,7 @@ export default {
       ptasksearch: null,
       tasks: [{
         name: '无',
-        id: '0',
+        id: 0,
       }],
       tasknames: [],
       taskids: [],
@@ -277,6 +277,9 @@ export default {
     ptasksearch(val) {
       val && this.reloadTasks();
     },
+    showcolor() {
+      localStorage.setItem('showcolor', this.showcolor);
+    },
   },
 
   mounted() {
@@ -291,6 +294,7 @@ export default {
     this.reloadTasks();
     this.users = this.$store.state.users;
     this.usergroups = this.$store.state.usergroups;
+    this.showcolor = localStorage.getItem('showcolor') === 'true';
   },
 
   methods: {
@@ -631,10 +635,6 @@ export default {
 
       this.ptaskloading = true;
       new Promise((resolve) => {
-        const objs = [{
-          name: '无',
-          id: '0',
-        }];
         let url = `/task?filter=${this.ptasksearch}`;
         if (id) {
           url = `/task/${id}`;
@@ -658,18 +658,14 @@ export default {
             default:
               console.dir('服务器报错');
           }
-          resolve({
-            objs,
-          });
+          resolve();
         }).catch((e) => {
           console.dir('服务器报错');
           if (e.response.data.code === 101) {
             this.$store.commit('logout');
             this.$router.replace('/login');
           }
-          resolve({
-            objs,
-          });
+          resolve();
         });
       }).then(() => {
         this.ptaskloading = false;

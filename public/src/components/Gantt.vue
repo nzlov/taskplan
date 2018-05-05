@@ -1,12 +1,6 @@
 <template>
   <v-container fluid>
     <remote-js src="//export.dhtmlx.com/gantt/api.js"></remote-js>
-    <v-layout>
-      <v-spacer></v-spacer>
-      <v-btn @click.stop="exportdata" dark color="indigo">
-        导出<v-icon right>cloud_download</v-icon>
-      </v-btn>
-    </v-layout>
     <div style="height:94%;" ref="gantt"></div>
   </v-container>
 </template>
@@ -54,12 +48,12 @@ export default {
     ];
     gantt.config.add_column = false;
 
-    gantt.templates.grid_row_class = (startdate, enddate, item) => {
+    gantt.templates.grid_row_class = ((startdate, enddate, item) => {
       return this.getColorStyle(item);
-    };
-    gantt.templates.task_class = (startdate, enddate, item) => {
+    });
+    gantt.templates.task_class = ((startdate, enddate, item) => {
       return this.getColorStyle(item);
-    };
+    });
     gantt.config.columns = [
       {
         name: 'text',
@@ -88,7 +82,18 @@ export default {
   },
   methods: {
     load(data) {
-      console.dir(data);
+      const ids = [];
+      data.data.forEach((element) => {
+        ids.push(element.id);
+      });
+      const newdata = [];
+      data.data.forEach((element) => {
+       if (ids.indexOf(element.parent) === -1) {
+          element.parent = 0;
+        }
+        newdata.push(element);
+      });
+      data.data = newdata;
       gantt.clearAll();
       gantt.parse(data);
       const today = new Date();

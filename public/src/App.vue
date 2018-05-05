@@ -136,10 +136,12 @@ export default {
       ],
       title: 'TaskPlan',
       login: this.$store.state.login,
+      ok: false,
     };
   },
   watch: {
     '$store.state.login': 'init',
+    '$store.state.ok': 'oks',
   },
   created() {
     this.$store.commit('init');
@@ -151,6 +153,16 @@ export default {
       this.username = this.$store.state.username;
       this.realname = this.$store.state.realname;
       if (this.$store.state.login) {
+        this.$store.commit('reloadusers');
+        this.$store.commit('reloadusergroups');
+        this.$store.commit('reloadroles');
+        this.$store.commit('reloadholidays');
+      } else {
+        this.$router.replace('/login');
+      }
+    },
+    oks() {
+      if (this.$store.state.ok === 4) {
         this.$store.state.menu.forEach((element) => {
           for (const v of this.$store.state.constmenu) {
             if (v.path === element) {
@@ -159,13 +171,8 @@ export default {
             }
           }
         });
-        this.$store.commit('reloadusers');
-        this.$store.commit('reloadusergroups');
-        this.$store.commit('reloadroles');
-        this.$store.commit('reloadholidays');
         this.$router.replace('/');
-      } else {
-        this.$router.replace('/login');
+        this.ok = true;
       }
     },
     close() {
@@ -205,6 +212,7 @@ export default {
               this.message = '用户名重复';
               this.alert_error = true;
               this.login = false;
+              this.ok = false;
               break;
             }
             default:
@@ -214,6 +222,7 @@ export default {
         }).catch(() => {
           this.alert = true;
           this.login = false;
+          this.ok = false;
         });
       }
     },

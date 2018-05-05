@@ -1,6 +1,23 @@
 <template>
   <v-container style="height:100%;">
-    <gantt id="gantt" style="height:100%;" ref="gantt"></gantt>
+    <v-card style="height:100%;">
+      <v-card-title>
+        <v-spacer></v-spacer>
+        <v-btn @click.stop="exportdata" dark color="indigo">
+          导出<v-icon right>cloud_download</v-icon>
+        </v-btn>
+        <v-menu
+          offset-x
+          :close-on-content-click="false"
+          :nudge-width="400"
+          v-model="menu"
+        >
+          <v-btn icon  slot="activator"><v-icon>more_vert</v-icon></v-btn>
+          <task-filter ref="filters" :show="menu" :okfunc="filter" :cancelfunc="() => {menu = false}"></task-filter>
+        </v-menu>
+      </v-card-title>
+      <gantt id="gantt" style="height:100%;" ref="gantt"></gantt>
+    </v-card>
   </v-container>
 </template>
 
@@ -10,19 +27,34 @@ import DateUtil from '../utils/date';
 export default {
   data() {
     return {
+      menu: false,
+      filters: {},
     };
   },
   mounted() {
+    this.filters = this.$refs.filters.init();
     this.load();
   },
   methods: {
+    filter(v) {
+      console.dir(v);
+      this.filters = v;
+      this.menu = false;
+      this.load();
+    },
+    exportdata() {
+      this.$refs.gantt.exportdata();
+    },
     load() {
       new Promise((resolve) => {
         const items = [];
-        this.$http.LGet(this.$store.state, '/task?all=t&order=start').then((resp) => {
+        this.$http.LGet(this.$store.state, `/taskn?all=t&order=start&filters=${JSON.stringify(this.filters)}`).then((resp) => {
           switch (resp.data.code) {
             case 0: {
               resp.data.data.data.forEach((element) => {
+                if (element.Start === 0 || element.End === 0) {
+                  return;
+                }
                 items.push({
                   id: element.ID,
                   text: element.Name,

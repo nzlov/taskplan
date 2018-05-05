@@ -92,9 +92,12 @@ type Task struct {
 
 	CreateUserID uint `gorm:"createuserid" description:"创建人ID"`
 
-	Start   int64 `description:"开始时间"`
-	End     int64 `description:"结束时间"`
-	RealEnd int64 `description:"真正结束时间"`
+	OStart   int64 `description:"变成父级任务前开始时间"`
+	OEnd     int64 `description:"变成父级任务前结束时间"`
+	ORealEnd int64 `description:"变成父级任务前真正结束时间"`
+	Start    int64 `description:"开始时间"`
+	End      int64 `description:"结束时间"`
+	RealEnd  int64 `description:"真正结束时间"`
 
 	Status int `description:"状态 1 创建 2 完成 3 重新开始"`
 
@@ -403,13 +406,15 @@ func TaskUpdate(c *gin.Context) {
 			if err != nil {
 				tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
 			} else {
-				if need && task.ParentTaskID > 0 {
-					if task.ParentTaskID != otaskid {
+				if need {
+					if task.ParentTaskID != otaskid && otaskid > 0 {
 						fmt.Println("更新老父级")
 						updatesTask(tx, task, otaskid, true)
 					}
-					fmt.Println("更新父级")
-					updatesTask(tx, task, task.ParentTaskID, false)
+					if task.ParentTaskID > 0 {
+						fmt.Println("更新父级")
+						updatesTask(tx, task, task.ParentTaskID, false)
+					}
 				}
 				if needupdateChildPUserGroup {
 					tx.DB.Model(new(Task)).Where("parent_task_id = ?", task.ID).Updates(map[string]interface{}{
@@ -428,9 +433,6 @@ func TaskUpdate(c *gin.Context) {
 // action 0 更新 1 删除
 func updatesTask(tx *Tx, child Task, id uint, del bool) {
 	fmt.Printf("updatesTask init:%+v\n%v----%v\n", child, id, del)
-	if child.ParentTaskID == 0 {
-		return
-	}
 	task := Task{}
 	err := tx.DB.First(&task, id).Error
 	if err != nil {
@@ -499,6 +501,17 @@ func updatesTask(tx *Tx, child Task, id uint, del bool) {
 	fmt.Println("updatesTask update", "need", need)
 	//判断是否需要更新
 	if need || task.PTask != ptask {
+		if task.PTask != ptask {
+			if ptask {
+				task.OStart = task.Start
+				task.OEnd = task.End
+				task.ORealEnd = task.RealEnd
+			} else {
+				task.Start = task.OStart
+				task.End = task.OEnd
+				task.RealEnd = task.ORealEnd
+			}
+		}
 		task.PTask = ptask
 		fmt.Println("updatesTask update")
 		task.TimeRect = TaskTimeRects{}
@@ -513,6 +526,119 @@ func updatesTask(tx *Tx, child Task, id uint, del bool) {
 }
 
 func TaskList(c *gin.Context) {
+	tx := NewTx(c)
+	query := map[string]interface{}{}
+
+	offsets := c.Query("offset")
+	limits := c.Query("limit")
+
+	offset := int64(-1)
+	if strings.TrimSpace(offsets) != "" {
+		offset, _ = strconv.ParseInt(offsets, 10, 64)
+	}
+	limit := int64(-1)
+	if strings.TrimSpace(limits) != "" {
+		limit, _ = strconv.ParseInt(limits, 10, 64)
+	}
+	objs := []Task{}
+	ors := [][]map[string]interface{}{}
+
+	filters := struct {
+		TimeRect      int    `json:"timerect"`
+		TimeRectStart string `json:"timerectstart"`
+		TimeRectEnd   string `json:"timerectend"`
+		Search        string `json:"search"`
+		Status        []int  `json:"status"`
+		Users         []int  `json:"users"`
+		UserGroups    []int  `json:"usergroups"`
+	}{}
+
+	if filterstr := strings.TrimSpace(c.Query("filters")); filterstr != "" {
+		err := json.Unmarshal([]byte(filterstr), &filters)
+		if err != nil {
+			tx.Error(http.StatusBadRequest, CodeParamsError, err.Error())
+			return
+		}
+		timeStart, timeEnd := int64(0), int64(0)
+		now := time.Now()
+		switch filters.TimeRect {
+		case 0:
+			weekday := now.Weekday()
+			if weekday == 0 {
+				weekday = 7
+			}
+			starYear, startMonth, startDay := now.AddDate(0, 0, int(-(weekday - 1))).Date()
+			endYear, endMonth, endDay := now.AddDate(0, 0, int(7-weekday)).Date()
+			timeStartT, err := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%d-%02d-%02d 00:00:00", starYear, startMonth, startDay))
+			if err != nil {
+				panic(err)
+			}
+			timeEndT, err := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%d-%02d-%02d 23:59:59", endYear, endMonth, endDay))
+			if err != nil {
+				panic(err)
+			}
+			timeStart = timeStartT.Unix()
+			timeEnd = timeEndT.Unix()
+		case 1:
+			year, month, _ := now.Date()
+			timeStartT, _ := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%d-%02d-01 00:00:00", year, month))
+			timeEndT, _ := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%d-%02d-01 00:00:00", year, month+1))
+			timeStart = timeStartT.Unix()
+			timeEnd = timeEndT.Unix()
+		case 2:
+			timeStartT, _ := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%s 00:00:00", filters.TimeRectStart))
+			timeEndT, _ := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%s 23:59:59", filters.TimeRectEnd))
+			timeStart = timeStartT.Unix()
+			timeEnd = timeEndT.Unix()
+		}
+		query["\"end\" > ?"] = timeStart
+		query["\"start\" < ?"] = timeEnd
+
+		if len(filters.UserGroups) > 0 {
+			query["user_group_id in (?)"] = filters.UserGroups
+		}
+		if len(filters.Users) > 0 {
+			query["user_id in (?)"] = filters.Users
+		}
+
+		if t := strings.TrimSpace(filters.Search); t != "" {
+			or := []map[string]interface{}{}
+			or = append(or, map[string]interface{}{
+				"name like ?": "%" + t + "%",
+			})
+			or = append(or, map[string]interface{}{
+				"description like ?": "%" + t + "%",
+			})
+			ors = append(ors, or)
+		}
+
+		for _, v := range filters.Status {
+			switch v {
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			}
+		}
+	}
+
+	total, err := DBFind2(tx.DB, new(Task), &objs, query, c.Query("order")+",-created_at", offset, limit, true, ors...)
+	if err != nil {
+		tx.Error(http.StatusInternalServerError, CodeDBError, err.Error())
+	} else {
+		tx.Ok(CodeOK, map[string]interface{}{
+			"total": total,
+			"data":  objs,
+		})
+	}
+}
+
+func TaskListO(c *gin.Context) {
 	tx := NewTx(c)
 	query := map[string]interface{}{}
 	all := c.Query("all")

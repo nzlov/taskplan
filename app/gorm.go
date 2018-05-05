@@ -74,6 +74,10 @@ func DBFind(db *gorm.DB, obj, objs interface{}, where map[string]interface{}, or
 	db = GenQueryDB(db, where, or)
 	return DBCount(db, obj, needTotal), DBOLO(db, order, int(offset), int(limit)).Find(objs).Error
 }
+func DBFind2(db *gorm.DB, obj, objs interface{}, where map[string]interface{}, order string, offset, limit int64, needTotal bool, ors ...[]map[string]interface{}) (int, error) {
+	db = GenQueryDB(db, where, ors...)
+	return DBCount(db, obj, needTotal), DBOLO(db, order, int(offset), int(limit)).Find(objs).Error
+}
 
 func DBOLO(db *gorm.DB, order string, offset, limit int) *gorm.DB {
 	order = strings.Trim(order, ",")
@@ -98,27 +102,45 @@ func DBOLO(db *gorm.DB, order string, offset, limit int) *gorm.DB {
 	return db
 }
 
-func GenQueryDB(db *gorm.DB, Where map[string]interface{}, Or []map[string]interface{}) *gorm.DB {
-	sqlWhere := ""
-	sqlV := []interface{}{}
+func GenQueryDB(db *gorm.DB, Where map[string]interface{}, Ors ...[]map[string]interface{}) *gorm.DB {
 	for k, v := range Where {
-		sqlWhere += "and " + k
-		sqlV = append(sqlV, v)
-	}
-	sqlWhere = strings.TrimLeft(sqlWhere, "and")
-	if Or != nil && len(Or) > 0 {
-		fmt.Println("OR:", Or, len(Or))
-		for _, or := range Or {
-			sqls := sqlWhere
-			values := append([]interface{}{}, sqlV...)
-			for sql, value := range or {
-				sqls += "and " + sql
-				values = append(values, value)
-			}
-			db = db.Or(strings.TrimLeft(sqls, "and"), values...)
+		if len(k) == 0 {
+			continue
 		}
-	} else {
-		db = db.Where(sqlWhere, sqlV...)
+		db = db.Where(k, v)
+	}
+	if len(Ors) > 0 {
+		s, v := GenOr(Ors...)
+		fmt.Printf("GENOR OK:%s:%+v\n", s, v)
+		if len(s) > 0 {
+			db = db.Where(s, v...)
+		}
 	}
 	return db
+}
+
+func GenOr(Ors ...[]map[string]interface{}) (string, []interface{}) {
+	fmt.Printf("GENOR:%+v\n", Ors)
+	sqlstr := ""
+	sqlV := []interface{}{}
+	for _, or := range Ors {
+		if len(or) == 0 {
+			continue
+		}
+		orstr := ""
+		for _, o := range or {
+			if len(o) == 0 {
+				continue
+			}
+			ostr := ""
+			for sql, value := range o {
+				ostr += fmt.Sprintf("AND %s ", sql)
+				sqlV = append(sqlV, value)
+			}
+			orstr = orstr + " OR (" + strings.Trim(ostr, "AND") + ") "
+		}
+		sqlstr = sqlstr + "AND (" + strings.Trim(orstr, " OR") + ") "
+	}
+
+	return strings.Trim(sqlstr, "AND"), sqlV
 }

@@ -45,7 +45,8 @@ func Router(app *gin.Engine) {
 	app.POST("/api/leave", Auth("leave.add"), LeaveAdd)
 	app.DELETE("/api/leave/:id", Auth("leave.del"), LeaveDel)
 
-	app.GET("/api/task", Auth("task.list"), TaskList)
+	app.GET("/api/task", Auth("task.list"), TaskListO)
+	app.GET("/api/taskn", Auth("task.list"), TaskList)
 	app.GET("/api/task/:id", Auth("task.list"), TaskList)
 	app.POST("/api/task", Auth("task.add"), TaskAdd)
 	app.POST("/api/task/:id", Auth("task.update"), TaskUpdate)
