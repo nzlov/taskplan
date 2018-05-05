@@ -97,7 +97,8 @@ export default {
         parent: element.ParentTaskID,
         user: element.User.RealName,
         start_date: this.formatDate(element.Start),
-        end_date: this.formatDate(element.End),
+        start_date2: DateUtil.formatDate(element.Start),
+        end_date2: DateUtil.formatDate(element.End),
         duration: this.getDuration(element),
         open: true,
 
@@ -111,7 +112,7 @@ export default {
         start: element.Start,
         end: element.End,
         realend: element.RealEnd,
-        real_date: this.formatDate(element.RealEnd),
+        real_date: DateUtil.formatDate(element.RealEnd),
         status: element.Status,
         statuss: this.formatStatus(element),
         history: element.TaskHistory,

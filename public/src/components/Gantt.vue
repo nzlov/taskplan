@@ -48,8 +48,8 @@ export default {
       return `<b>任务:</b>${task.text}<br/>
               <b>组:</b>${task.usergroup}<br/>
               <b>资源:</b>${task.user}<br/>
-              <b>开始时间:</b>${task.start_date}<br/>
-              <b>结束时间:</b>${task.end_date}<br/>
+              <b>开始时间:</b>${task.start_date2}<br/>
+              <b>结束时间:</b>${task.end_date2}<br/>
               <b>真正结束时间:</b>${task.real_date}<br/>
               <b>状态:</b>${task.statuss}<br/>
               `
