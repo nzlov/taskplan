@@ -1,7 +1,7 @@
 <template>
-  <v-container fluid>
+  <v-container v-resize="onResize">
     <remote-js src="//export.dhtmlx.com/gantt/api.js"></remote-js>
-    <div style="height:94%;" ref="gantt"></div>
+    <div style="height:90%;" ref="gantt"></div>
   </v-container>
 </template>
 
@@ -11,17 +11,6 @@ import 'dhtmlx-gantt/codebase/locale/locale_cn';
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
 
 export default {
-  props: {
-    tasks: {
-      type: Object,
-      default() {
-        return {
-          data: [],
-          links: [],
-        };
-      },
-    },
-  },
   components: {
     'remote-js': {
       render(createElement) {

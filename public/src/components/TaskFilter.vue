@@ -222,7 +222,6 @@ export default {
         value: element.id,
       });
     });
-    this.d();
     this.init();
   },
   methods: {
@@ -236,6 +235,7 @@ export default {
       };
     },
     init() {
+      this.d();
       const filters = localStorage.getItem('filters');
       if (filters.length > 0) {
         this.filters = JSON.parse(filters);

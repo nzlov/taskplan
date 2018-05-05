@@ -16,7 +16,7 @@
           <task-filter ref="filters" :show="menu" :okfunc="filter" :cancelfunc="() => {menu = false}"></task-filter>
         </v-menu>
       </v-card-title>
-      <gantt id="gantt" style="height:100%;" ref="gantt"></gantt>
+      <gantt id="gantt" style="height:96%;" ref="gantt"></gantt>
     </v-card>
   </v-container>
 </template>
