@@ -51,7 +51,7 @@ module.exports = {
     'no-eval': 'off',
     'no-undef': 'off',
     'no-lonely-if': 'off',
-    "no-restricted-syntax": 0,
+    'no-restricted-syntax': 0,
     'no-unused-expressions': ['error',{
        "allowShortCircuit": true ,
     }]

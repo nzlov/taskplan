@@ -91,7 +91,7 @@ export default {
       });
     },
     taskToGantt(items, element) {
-      let task = {
+      const task = {
         id: element.ID,
         text: element.Name,
         parent: element.ParentTaskID,

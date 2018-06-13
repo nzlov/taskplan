@@ -38,22 +38,16 @@ export default {
     ];
     gantt.config.add_column = false;
 
-    gantt.templates.grid_row_class = ((startdate, enddate, item) => {
-      return this.getColorStyle(item);
-    });
-    gantt.templates.task_class = ((startdate, enddate, item) => {
-      return this.getColorStyle(item);
-    });
-    gantt.templates.tooltip_text = function(start,end,task){
-      return `<b>任务:</b>${task.text}<br/>
+    gantt.templates.grid_row_class = (startdate, enddate, item) => this.getColorStyle(item);
+    gantt.templates.task_class = (startdate, enddate, item) => this.getColorStyle(item);
+    gantt.templates.tooltip_text = (start, end, task) => `<b>任务:</b>${task.text}<br/>
               <b>组:</b>${task.usergroup}<br/>
               <b>资源:</b>${task.user}<br/>
               <b>开始时间:</b>${task.start_date2}<br/>
               <b>结束时间:</b>${task.end_date2}<br/>
               <b>真正结束时间:</b>${task.real_date}<br/>
               <b>状态:</b>${task.statuss}<br/>
-              `
-    };
+              `;
     gantt.config.columns = [
       {
         name: 'text',
@@ -81,17 +75,19 @@ export default {
     gantt.init(this.$refs.gantt);
   },
   methods: {
-    load(data) {
+    load(d) {
+      const data = d;
       const ids = [];
       data.data.forEach((element) => {
         ids.push(element.id);
       });
       const newdata = [];
       data.data.forEach((element) => {
-       if (ids.indexOf(element.parent) === -1) {
-          element.parent = 0;
+        const e = element;
+        if (ids.indexOf(e.parent) === -1) {
+          e.parent = 0;
         }
-        newdata.push(element);
+        newdata.push(e);
       });
       data.data = newdata;
       gantt.clearAll();

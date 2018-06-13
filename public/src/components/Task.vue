@@ -645,11 +645,15 @@ export default {
             case 0: {
               resp.data.data.data.forEach((element) => {
                 if (this.tasknames.indexOf(element.Name) === -1) {
-                  this.tasknames.push(element.Name);
+                  let n = element.Name;
+                  if (element.PTask) {
+                    n = `${element.Name}[父级任务]`;
+                  }
+                  this.tasknames.push(n);
                   this.taskids.push(element.ID);
                   this.tasks.push({
                     id: element.ID,
-                    name: element.Name,
+                    name: n,
                   });
                 }
               });

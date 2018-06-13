@@ -49,8 +49,9 @@ func (j *HistoryItems) Scan(value interface{}) error {
 }
 
 type TaskEasy struct {
-	ID   uint
-	Name string
+	ID    uint
+	Name  string
+	PTask bool `description:"是否为父级任务"`
 }
 
 //任务间隔
