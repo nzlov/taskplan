@@ -265,7 +265,7 @@ export default {
     init() {
       this.d();
       const filters = localStorage.getItem('filters');
-      if (filters.length > 0) {
+      if (filters && filters.length > 0) {
         this.filters = JSON.parse(filters);
       }
       return this.filters;

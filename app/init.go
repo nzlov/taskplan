@@ -6,19 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	PM = struct {
-		start string
-		end   string
-	}{}
-)
+var PM = struct {
+	start string
+	end   string
+}{}
 
 func Init(r *gin.Engine) {
-
-	u := "postgres://taskplan:shengyun123@192.168.1.9:5432/taskplan?sslmode=disable"
-	if gin.Mode() == "release" {
-		u = "postgres://taskplan:shengyun123@localhost/taskplan?sslmode=disable"
-	}
+	u := "postgres://postgres:asd@localhost/taskplan?sslmode=disable"
 
 	err := InitDB(u)
 	if err != nil {
@@ -43,10 +37,9 @@ func Init(r *gin.Engine) {
 	DB.InstantSet("gorm:auto_preload", true)
 
 	Router(r)
-
 }
 
-//计算下午上下班时间
+// 计算下午上下班时间
 func genPM() {
 	d := time.Now().Month()
 	if d > 4 && d < 10 {
